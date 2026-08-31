@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tata Umkm — Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/common.css">
+<link rel="stylesheet" href="css/editor.css">
+</head>
+<body>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="logo">
+      <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/></svg>
+      <span>Tata Umkm</span>
+    </div>
+    <h2 style="font-size:1.5rem;margin:12px 0 6px">Editor</h2>
+    <p>Masukkan API key untuk mengakses panel editor.</p>
+    <div class="fld">
+      <label>API Key</label>
+      <input type="password" id="loginKey" placeholder="Masukkan API key..." autofocus>
+    </div>
+    <p class="err" id="loginErr"></p>
+    <button class="btn solid" style="width:100%" id="loginBtn">Masuk</button>
+  </div>
+</div>
+
+<!-- ============ EDITOR SCREEN ============ -->
+<div class="editor-screen" id="editorScreen">
+
+  <!-- Top Bar -->
+  <div class="ed-top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/></svg>
+      <span>Tata Umkm Editor</span>
+    </div>
+    <div class="ed-top-right">
+      <button class="btn sm line" id="viewSiteBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg>
+        Lihat situs
+      </button>
+      <button class="btn sm" id="logoutBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Keluar
+      </button>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="ed-body">
+
+    <!-- Sidebar -->
+    <aside class="ed-sidebar">
+      <div class="ed-sidebar-head">
+        <h3>Kelola</h3>
+        <p>Klik item untuk edit, atau tambah baru.</p>
+      </div>
+      <nav class="ed-tabs" id="edTabs">
+        <button class="on" data-tab="produk">Produk</button>
+        <button data-tab="situs">Pengaturan Situs</button>
+      </nav>
+      <div class="ed-list" id="edList"></div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ed-main" id="edMain">
+      <div class="ed-empty">
+        <p class="serif">Pilih item dari sidebar</p>
+        <p>Atau klik "Tambah baru" untuk menambah produk.</p>
+      </div>
+    </main>
+
+  </div>
+</div>
+
+<!-- ============ MODAL & TOAST ============ -->
+<div class="ed-modal" id="edModal"></div>
+<div class="ed-toast" id="edToast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/editor.js"></script>
+</body>
+</html>
