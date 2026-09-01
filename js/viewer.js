@@ -535,7 +535,7 @@ document.addEventListener('keydown', e => {
 window.addEventListener('scroll', () => $('#hdr').classList.toggle('sc', scrollY > 30), {passive:true});
 const ro = new IntersectionObserver(es => es.forEach(en => {
   if(en.isIntersecting){ en.target.classList.add('in'); ro.unobserve(en.target); }
-}), {threshold:.12});
+}), {threshold:.01});
 const observeRv = () => document.querySelectorAll('.rv:not(.in)').forEach(el => ro.observe(el));
 
 /* Tombol magnetik kecil pada hero */

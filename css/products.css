@@ -76,3 +76,21 @@
   .pcard-price{font-size:1rem}
   .pcard-tag{font-size:.78rem}
 }
+
+/* ============ SKELETON ============ */
+.skeleton-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:clamp(16px,2vw,26px)}
+.skeleton-card{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:.8}}
+.skeleton-thumb{width:100%;height:190px;background:linear-gradient(90deg,var(--paper2) 25%,var(--card) 50%,var(--paper2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skeleton-chip{height:24px;width:80px;background:var(--paper2);border-radius:999px}
+.skeleton-title{height:22px;width:70%;background:var(--paper2);border-radius:4px;margin:8px 0 6px}
+.skeleton-tag{height:16px;width:50%;background:var(--paper2);border-radius:4px}
+.skeleton-price{height:20px;width:35%;background:var(--paper2);border-radius:4px;margin-top:auto}
+
+[data-view="list"] .skeleton-grid{grid-template-columns:1fr}
+[data-view="list"] .skeleton-card{display:flex;align-items:center;padding:0}
+[data-view="list"] .skeleton-card .skeleton-thumb{width:148px;height:96px;flex:none;border-radius:14px 0 0 14px}
+[data-view="list"] .skeleton-card .pcard-body{flex:1;padding:16px 18px}
+
+#rows.loaded .skeleton-grid{display:none}

@@ -65,7 +65,22 @@
     <!-- Konten: chips kategori (mobile) + grid -->
     <div class="mk-content">
       <div class="filters" id="filters"></div>
-      <div id="rows"></div>
+      <div id="rows">
+        <!-- Skeleton placeholder - muncul instan -->
+        <div class="skeleton-grid" id="skeletonGrid">
+          ${Array.from({length: 6}, () => `
+            <article class="prow pcard skeleton-card">
+              <div class="pthumb skeleton-thumb"></div>
+              <div class="pcard-body">
+                <div class="pcard-top"><span class="chip skeleton-chip"></span></div>
+                <div class="skeleton-title"></div>
+                <div class="skeleton-tag"></div>
+                <div class="skeleton-price"></div>
+              </div>
+            </article>
+          `).join('')}
+        </div>
+      </div>
     </div>
   </div>
 </section>

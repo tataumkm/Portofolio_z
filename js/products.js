@@ -110,7 +110,7 @@ function renderRows(){
 
   if (state.view === 'list') {
     rows.innerHTML = list.map((p,i) => `
-      <article class="prow pcard pcard-list" data-id="${esc(p.id)}" style="animation-delay:${Math.min(i*45,300)}ms">
+      <article class="prow pcard" data-id="${esc(p.id)}" style="animation-delay:${Math.min(i*45,300)}ms">
         <div class="pthumb ${p.image?'':'mock'}">${thumbHTML(p,'list')}</div>
         <div class="pcard-body">
           <div class="pcard-top"><span class="chip">${esc(catLabel(p.category))}</span>${p.badge?`<span class="badge">${esc(p.badge)}</span>`:''}</div>
@@ -132,6 +132,9 @@ function renderRows(){
         </div>
       </article>`).join('');
   }
+
+  // Hide skeleton after content renders
+  rows.classList.add('loaded');
 
   // Lazy-render mockup thumbnails via IntersectionObserver
   lazyThumbs();
