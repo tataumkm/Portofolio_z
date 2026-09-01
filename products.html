@@ -40,7 +40,7 @@
     <div class="mk-toolbar">
       <div class="search">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20.5 20.5-4.2-4.2"/></svg>
-        <input type="text" id="q" placeholder="Cari produk...">
+        <input type="text" id="q" placeholder="Cari produk..." autocomplete="off">
       </div>
       <select id="sort" class="sort-select" aria-label="Urutkan">
         <option value="populer">Populer</option>
@@ -48,6 +48,10 @@
         <option value="termahal">Harga Tertinggi</option>
         <option value="az">Nama A–Z</option>
       </select>
+      <div class="view-toggle" id="viewToggle" role="group" aria-label="Tampilan katalog">
+        <button data-view="grid" class="on" title="Tampilan kisi"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg></button>
+        <button data-view="list" title="Tampilan daftar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      </div>
     </div>
   </div>
 

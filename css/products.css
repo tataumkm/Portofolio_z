@@ -1,8 +1,17 @@
 /* ============ KATALOG MARKETPLACE ============ */
+
+/* Toolbar */
 .mk-toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .sort-select{border:1px solid var(--line-strong);background:var(--card);border-radius:999px;padding:9px 16px;font:inherit;font-size:.84rem;font-weight:600;color:var(--ink);cursor:pointer;transition:border-color .25s}
 .sort-select:focus{outline:none;border-color:var(--green)}
 
+/* View Toggle */
+.view-toggle{display:inline-flex;border:1px solid var(--line-strong);border-radius:999px;padding:3px;gap:2px}
+.view-toggle button{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;color:var(--ink-soft);transition:.25s;background:none;border:0;cursor:pointer}
+.view-toggle button.on{background:var(--ink);color:var(--paper)}
+.view-toggle button:hover:not(.on){background:var(--paper2)}
+
+/* Layout */
 .mk-layout{display:grid;grid-template-columns:210px 1fr;gap:clamp(20px,3vw,40px);margin-top:8px}
 
 /* Sidebar kategori */
@@ -18,28 +27,45 @@
 .mk-content{min-width:0}
 .mk-content .filters{margin-bottom:16px}
 
-/* Kartu produk (grid) */
+/* ============ GRID CARD ============ */
 #rows{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:clamp(16px,2vw,26px)}
 .pcard{display:flex;flex-direction:column;align-items:stretch;gap:0;padding:0;border:1px solid var(--line-strong);border-radius:14px;overflow:hidden;cursor:pointer;background:var(--card);animation:rowIn .55s var(--ease) both;isolation:isolate;transition:box-shadow .3s var(--ease),transform .3s var(--ease)}
 .pcard::before{display:none}
 .pcard:hover{box-shadow:0 18px 40px rgba(24,21,17,.14);transform:translateY(-3px)}
 .pcard:hover>*{color:var(--ink)}
-.pcard:hover .pcard-tag,.pcard:hover .price-old{color:var(--ink-soft)}
-.pthumb{position:relative;width:100%;height:190px;border-radius:0;border:0;border-bottom:1px solid var(--line);overflow:hidden;background:var(--card);display:flex;align-items:center;justify-content:center}
-.pthumb .pthumb-img{width:100%;height:100%;object-fit:cover;display:block}
+.pcard:hover .pcard-tag,.pcard:hover .pcard-name{color:var(--ink)}
+.pthumb{position:relative;border-radius:0;border:0;border-bottom:1px solid var(--line);background:var(--card);display:block;overflow:hidden}
+.pthumb .pthumb-img{width:100%;height:100%;object-fit:cover}
 .pthumb.mock{pointer-events:none}
 .pthumb .thumb-mock{position:absolute;inset:0;overflow:hidden;transform:scale(1.7);transform-origin:50% 10%;pointer-events:none}
 .pthumb .thumb-mock .mk{font-size:7px}
+.grid .pthumb,[data-view="grid"] .pthumb{width:100%;height:190px}
+
 .pcard-body{padding:16px 18px 20px;display:flex;flex-direction:column;gap:7px;flex:1}
 .pcard-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.pcard-name{font-size:1.25rem;font-family:'Fraunces',serif;font-weight:540;line-height:1.2}
-.pcard-tag{font-size:.84rem;color:var(--ink-soft);line-height:1.45}
+.pcard-name{font-size:1.25rem;font-family:'Fraunces',serif;font-weight:540;line-height:1.2;margin:0}
+.pcard-tag{font-size:.84rem;color:var(--ink-soft);line-height:1.45;margin:0}
 .pcard-price{font-family:'Fraunces',serif;font-weight:560;font-size:1.15rem;margin-top:auto;padding-top:10px}
+
+/* ===== LIST CARD ===== */
+[data-view="list"] #rows{grid-template-columns:1fr}
+[data-view="list"] .pcard{padding:0;flex-direction:row;align-items:center;text-decoration:none}
+[data-view="list"] .pcard .pcard-body{flex:1}
+[data-view="list"] .pcard .pcard-top{margin-bottom:2px}
+[data-view="list"] .pcard-name{font-size:1.1rem}
+[data-view="list"] .pcard-price-row{margin:0 0 0 auto;text-align:right}
+[data-view="list"] .pcard-price{font-size:1.1rem}
+[data-view="list"] .pcard-tag{max-width:56ch}
+[data-view="list"] .prow-arr{display:inline-flex;margin:0 4px}
+@media(max-width:760px){[data-view="list"] .pcard{flex-direction:column;text-align:center} [data-view="list"] .pcard-body{text-align:left} [data-view="list"] .pcard-price-row{text-align:right} [data-view="list"] .pcard-tag{max-width:none}}
+
+[data-view="list"] .pcard .pthumb{width:148px;height:96px;flex:none;border-radius:14px 0 0 14px;border-bottom:0;border-right:1px solid var(--line)}
+@media(max-width:760px){[data-view="list"] .pcard .pthumb{width:100%;height:160px;border-radius:14px 14px 0 0;border-bottom:1px solid var(--line);border-right:0}}
 
 @media(max-width:900px){
   .mk-toolbar .search{order:2;width:100%}
   .mk-layout{grid-template-columns:1fr}
-  .mk-side{display:none} /* pakai chips mobile */
+  .mk-side{display:none}
 }
 @media(max-width:560px){
   .mk-layout{grid-template-columns:1fr}

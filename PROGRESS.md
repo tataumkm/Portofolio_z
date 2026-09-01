@@ -46,3 +46,6 @@ Log perubahan file oleh Agent AI. Format: tanggal, file, deskripsi perubahan.
 | 36 | 2026-09-01 | products.html | Baru — Halaman katalog marketplace (header+sidebar kategori+grid+toolbar search/sort+detail overlay) |
 | 37 | 2026-09-01 | css/products.css | Baru — Style marketplace (.mk-layout, .mk-side, .pcard grid, toolbar sort, responsive) |
 | 38 | 2026-09-01 | js/products.js | Baru — Logic marketplace mandiri: grid kartu, filter kategori, sort, search, detail overlay (reuse mockup/device, duplikasi dipisah) |
+| 39 | 2026-09-01 | products.html | Polish — Tambah toggle view grid/list di toolbar katalog |
+| 40 | 2026-09-01 | css/products.css | Polish — Style view toggle + list mode card (thumbnail kiri + teks) |
+| 41 | 2026-09-01 | js/products.js | Polish — Toggle grid/list + lazy-render thumbnail mockup via IntersectionObserver (mengurangi jeda scroll/kosong) |

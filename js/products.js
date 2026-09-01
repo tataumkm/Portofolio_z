@@ -30,7 +30,8 @@ function fk(n){ return (n||0).toLocaleString('id-ID'); }
 function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
 
 let DATA;
-const state = { cat: 'all', q: '', sort: 'populer' };
+const state = { cat: 'all', q: '', sort: 'populer', view: 'grid' };
+try { state.view = localStorage.getItem('tataumkm_pk_view') || 'grid'; } catch(e){}
 
 /* ═══════════ LOAD ═══════════ */
 async function loadData(){
@@ -87,33 +88,98 @@ function filteredList(){
   return list;
 }
 
-/* Thumbnail — URL gambar, fallback mockup DOM */
-function productThumb(p){
-  if (p.image) return `<img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" class="pthumb-img" onerror="this.closest('.pthumb').classList.add('mock');this.remove()">`;
-  return `<span class="thumb-mock">${mockupHTML(p)}</span>`;
+/* Thumbnail — img (lazy) atau placeholder untuk lazy mockup */
+function thumbHTML(p, mode){
+  if (p.image) {
+    return `<img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" class="pthumb-img" onerror="this.closest('.pthumb').classList.add('loaded-failed')">`;
+  }
+  return `<span class="thumb-mock" data-pid="${esc(p.id)}" style="position:absolute;inset:0;overflow:hidden;transform:scale(1.7);transform-origin:50% 10%;pointer-events:none"></span>`;
 }
 
 function renderRows(){
   const list = filteredList();
   const rows = $('#rows');
+  rows.dataset.view = state.view;
   $('#countNote').textContent = list.length + ' produk';
+  syncViewToggle();
+
   if(!list.length){
     rows.innerHTML = `<div class="empty"><p class="serif">Tidak ada produk yang cocok.</p><p>Coba kata kunci atau kategori lain.</p></div>`;
     return;
   }
-  rows.innerHTML = list.map((p,i) => `
-    <article class="prow pcard" data-id="${esc(p.id)}" style="animation-delay:${Math.min(i*45,300)}ms">
-      <div class="pthumb ${p.image?'':'mock'}">${productThumb(p)}</div>
-      <div class="pcard-body">
-        <div class="pcard-top">
-          <span class="chip">${esc(catLabel(p.category))}</span>
-          ${p.badge?`<span class="badge">${esc(p.badge)}</span>`:''}
+
+  if (state.view === 'list') {
+    rows.innerHTML = list.map((p,i) => `
+      <article class="prow pcard pcard-list" data-id="${esc(p.id)}" style="animation-delay:${Math.min(i*45,300)}ms">
+        <div class="pthumb ${p.image?'':'mock'}">${thumbHTML(p,'list')}</div>
+        <div class="pcard-body">
+          <div class="pcard-top"><span class="chip">${esc(catLabel(p.category))}</span>${p.badge?`<span class="badge">${esc(p.badge)}</span>`:''}</div>
+          <h3 class="pcard-name">${esc(p.name)}</h3>
+          <p class="pcard-tag">${esc(p.tagline)}</p>
+          <div class="pcard-price-row"><span class="pcard-price">${rp(p.price)}${p.compareAt?`<span class="price-old">${rp(p.compareAt)}</span>`:''}</span></div>
         </div>
-        <h3 class="pcard-name">${esc(p.name)}</h3>
-        <p class="pcard-tag">${esc(p.tagline)}</p>
-        <span class="pcard-price">${rp(p.price)}${p.compareAt?`<span class="price-old">${rp(p.compareAt)}</span>`:''}</span>
-      </div>
-    </article>`).join('');
+        <span class="prow-arr" style="margin:0 12px">${I('up',16)}</span>
+      </article>`).join('');
+  } else {
+    rows.innerHTML = list.map((p,i) => `
+      <article class="prow pcard" data-id="${esc(p.id)}" style="animation-delay:${Math.min(i*45,300)}ms">
+        <div class="pthumb ${p.image?'':'mock'}">${thumbHTML(p,'grid')}</div>
+        <div class="pcard-body">
+          <div class="pcard-top"><span class="chip">${esc(catLabel(p.category))}</span>${p.badge?`<span class="badge">${esc(p.badge)}</span>`:''}</div>
+          <h3 class="pcard-name">${esc(p.name)}</h3>
+          <p class="pcard-tag">${esc(p.tagline)}</p>
+          <span class="pcard-price">${rp(p.price)}${p.compareAt?`<span class="price-old">${rp(p.compareAt)}</span>`:''}</span>
+        </div>
+      </article>`).join('');
+  }
+
+  // Lazy-render mockup thumbnails via IntersectionObserver
+  lazyThumbs();
+}
+
+function setView(v){
+  state.view = v;
+  try { localStorage.setItem('tataumkm_pk_view', v); } catch(e){}
+  renderRows();
+  observeRv();
+}
+function syncViewToggle(){
+  const tok = document.querySelector('#viewToggle');
+  if (tok) tok.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.view === state.view));
+}
+
+/* Lazy thumbnail: render mockup DOM only when visible */
+let thumbIO;
+function lazyThumbs(){
+  // Clear existing IO
+  if (thumbIO) thumbIO.disconnect();
+
+  const thumbs = document.querySelectorAll('.pthumb.mock .thumb-mock[data-pid]');
+  if (!thumbs.length){ thumbIO=null; return; }
+
+  const visible = () => {
+    thumbs.forEach(el => {
+      const id = el.dataset.pid;
+      const p = DATA.products.find(x=>x.id===id);
+      if (p && !el.dataset.rendered){
+        el.innerHTML = mockupHTML(p);
+        el.dataset.rendered = '1';
+      }
+    });
+  };
+  visible(); // render yg langsung visible untuk hindari flash kosong
+
+  thumbIO = new IntersectionObserver((entries, io) => {
+    entries.forEach(en => {
+      if (en.isIntersecting){
+        const el = en.target;
+        const p = DATA.products.find(x=>x.id===el.dataset.pid);
+        if (p && !el.dataset.rendered){ el.innerHTML = mockupHTML(p); el.dataset.rendered='1'; }
+        io.unobserve(el);
+      }
+    });
+  }, { rootMargin: '300px 0px' }); // pre-load sedikit sebelum masuk viewport
+  thumbs.forEach(el => { if(!el.dataset.rendered) thumbIO.observe(el); });
 }
 
 function renderAll(){ renderMeta(); renderCats(); renderRows(); }
@@ -328,10 +394,14 @@ $('#rows').addEventListener('click', e=>{
 $('#filters').addEventListener('click', e=>{ /* handled via onclicks */ });
 let qT; $('#q').addEventListener('input', e=>{ clearTimeout(qT); qT=setTimeout(()=>{ state.q=e.target.value; renderRows(); },140); });
 $('#sort').addEventListener('change', e=>{ state.sort=e.target.value; renderRows(); });
+$('#viewToggle').addEventListener('click', e=>{
+  const b=e.target.closest('button[data-view]'); if(!b) return;
+  setView(b.dataset.view);
+});
 
+window.addEventListener('scroll', ()=>$('#hdr').classList.toggle('sc',scrollY>30), {passive:true});
 document.addEventListener('keydown', e=>{
   if(e.key==='Escape' && $('#detail').classList.contains('open')) closeDetail();
 });
-window.addEventListener('scroll', ()=>$('#hdr').classList.toggle('sc',scrollY>30), {passive:true});
 
 loadData();
