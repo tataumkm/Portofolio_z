@@ -26,6 +26,15 @@ function doGet(e) {
     return jsonResponse(getAllData());
   }
 
+  // Verifikasi API key via GET (untuk login editor)
+  if (action === 'verifyKey') {
+    const key = e.parameter.key;
+    if (key === API_KEY) {
+      return jsonResponse({ valid: true });
+    }
+    return jsonResponse({ valid: false });
+  }
+
   return jsonResponse({ error: 'Unknown action' }, 400);
 }
 

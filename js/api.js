@@ -13,6 +13,23 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbz6MgIInPqvzJdrhskednlCvlvrWG_D3MLpePTxkfp7Gz9MKMED2z_Up8XlBkk0m0d7/exec';
 
 // ═══════════════════════════════════════════════════════════
+// VERIFY API KEY — Untuk login editor
+// ═══════════════════════════════════════════════════════════
+async function verifyApiKey(key) {
+  try {
+    const response = await fetch(`${API_URL}?action=verifyKey&key=${encodeURIComponent(key)}`, {
+      method: 'GET',
+      redirect: 'follow'
+    });
+    const result = await response.json();
+    return result.valid === true;
+  } catch (error) {
+    console.error('Gagal verifikasi API key:', error);
+    return false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
 // FETCH DATA — Publik, tidak perlu auth
 // ═══════════════════════════════════════════════════════════
 async function fetchData() {

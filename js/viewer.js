@@ -40,32 +40,42 @@ const finePointer = matchMedia('(pointer:fine)').matches;
    LOAD DATA — dari API atau cache
    ═══════════════════════════════════════════════════════════ */
 async function loadData() {
-  // Coba fetch dari API
+  // Tampilkan state memuat pada katalog
+  const rows = $('#rows');
+  if (rows) rows.innerHTML = `<div class="empty"><p class="serif">Memuat produk...</p><p>Mengambil data dari server.</p></div>`;
+
+  // Tampilkan cache dulu (instant), lalu update dari API
+  let hasCache = false;
+  try {
+    const cached = localStorage.getItem(LS_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed && parsed.products) {
+        DATA = parsed;
+        renderAll();
+        hasCache = true;
+      }
+    }
+  } catch (e) {}
+
+  // Fetch dari API
   const apiData = await fetchData();
-  if (apiData && apiData.products) {
+  if (apiData && apiData.products && apiData.products.length) {
     DATA = apiData;
     localStorage.setItem(LS_KEY, JSON.stringify(DATA));
     renderAll();
     return;
   }
 
-  // Fallback ke cache
-  try {
-    const cached = localStorage.getItem(LS_KEY);
-    if (cached) {
-      DATA = JSON.parse(cached);
-      renderAll();
-      return;
-    }
-  } catch (e) {}
+  // API gagal / kosong — cek apakah masih ada cache yang sudah dirender
+  if (hasCache) return;
 
-  // Fallback ke data minimal
-  DATA = {
-    site: { brand: 'Tata Umkm', tagline: 'Usaha kecil, alatnya _tertata_.', sub: '', whatsapp: '', location: '', hours: '', note: '' },
-    categories: [],
-    products: []
-  };
-  renderAll();
+  // Tidak ada cache dan API kosong/gagal
+  if (rows && !rows.querySelector('.prow')) {
+    rows.innerHTML = `<div class="empty"><p class="serif">Produk belum dimuat</p><p>Gagal terhubung ke server. Pastikan URL API sudah benar di <b>js/api.js</b>.</p><button id="retryBtn" style="margin-top:14px;text-decoration:underline;color:var(--green);font-weight:600">Coba lagi</button></div>`;
+    const rb = $('#retryBtn');
+    if (rb) rb.onclick = () => location.reload();
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════

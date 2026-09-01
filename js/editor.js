@@ -53,13 +53,24 @@ async function tryLoadData(key) {
   // Simpan key sementara
   localStorage.setItem(LS_KEY, key);
 
+  // Verifikasi API key dulu — baru boleh masuk
+  const valid = await verifyApiKey(key);
+  if (!valid) {
+    localStorage.removeItem(LS_KEY);
+    localStorage.removeItem(LS_DATA);
+    showLogin();
+    return;
+  }
+
+  localStorage.setItem(LS_KEY, key);
+
   const result = await fetchData();
   if (result && result.products) {
     DATA = result;
     localStorage.setItem(LS_DATA, JSON.stringify(DATA));
     showEditor();
   } else {
-    // Key tidak valid, tampilkan login
+    // Key valid tapi data gagal diambil
     localStorage.removeItem(LS_KEY);
     localStorage.removeItem(LS_DATA);
     showLogin();
