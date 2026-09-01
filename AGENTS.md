@@ -2,9 +2,10 @@
 
 ## Project
 
-**Tata Umkm** — Portfolio web app untuk produk aplikasi UMKM. Terdiri dari 2 web app:
-- `index.html` — viewer (publik, read-only, fetch dari API)
-- `editor.html` — editor (admin, password-protected, CRUD produk)
+**Tata Umkm** — Portfolio web app untuk produk aplikasi UMKM. Terdiri dari 3 web app:
+- `index.html` — viewer/Beranda (publik). Menampilkan produk unggulan (`featured`) saja.
+- `products.html` — Katalog lengkap model marketplace (grid, filter kategori, sort, search).
+- `editor.html` — editor (admin, password-protected, CRUD produk, testimoni, pengaturan).
 
 Backend: Google Apps Script + Google Sheets.
 Hosting: GitHub Pages.
@@ -39,38 +40,49 @@ Semua style khusus viewer: header (.hdr), hero, marquee (.mq), katalog (.prow, .
 ### `css/editor.css`
 Style khusus editor: login screen, drawer/form layout, form fields (.fld), list items (.dw-list-item), tab navigation, responsive editor layout.
 
+### `css/products.css`
+Style tambahan katalog marketplace (products.html): layout sidebar kategori + grid produk (.pcard, .pthumb), toolbar search/sort, responsive grid.
+
 ### `js/api.js`
 API client. Expose fungsi:
-- `fetchData()` — GET `?action=getData`, return `{ site, categories, products }`
+- `fetchData()` — GET `?action=getData`, return `{ site, categories, products, testimonials }`
 - `saveProduct(data)` — POST `action=saveProduct`
 - `deleteProduct(id)` — POST `action=deleteProduct`
 - `saveSite(data)` — POST `action=saveSite`
+- `saveTestimonial(data)`, `deleteTestimonial(id)` — POST
+- `verifyApiKey(key)` — GET validasi key untuk login editor
 - `API_URL` — konstanta URL Apps Script deployment (user ganti sendiri)
 
 ### `js/viewer.js`
-Logic viewer. Handle:
+Logic viewer (index.html, halaman utama). Handle:
 - Render meta site (brand, title, whatsapp links)
-- Render katalog (filter, search, rows)
+- Render katalog rekomendasi — HANYA produk `featured` (list teks-only, tanpa thumbnail)
 - Detail produk (open/close, device preview, mockup)
 - Mockup interaktif (POS click, habit toggle)
-- Hover card
-- Intersection observer untuk reveal animation
-- Header scroll effect
+- Hover card, Testimoni grid, reveal animation, header scroll
+
+### `js/products.js`
+Logic katalog marketplace (products.html). Mandiri (duplikasi mockup/device helper dari viewer.js). Handle:
+- Grid kartu produk (thumbnail URL / fallback mockup)
+- Filter kategori (sidebar desktop + chips mobile), sort, search
+- Detail produk overlay (reuse device preview)
 
 ### `js/editor.js`
 Logic editor. Handle:
 - Login flow (password → API key → cache di localStorage)
-- Render produk list + form CRUD
-- Render pengaturan situs form
-- Save/delete dengan toast feedback
+- Form produk modal (termasuk field image, compatibility, featured/unggulan)
+- Kelola testimoni (tab, modal CRUD)
+- Pengaturan situs (list baris → modal)
+- Save/delete dengan toast feedback, guard double-submit
 - Responsive behavior
 
 ### `gas/Code.gs`
 Google Apps Script backend. Handle:
-- `doGet(e)` — public data endpoint
+- `doGet(e)` — public data endpoint (getData, verifyKey)
 - `doPost(e)` — admin CRUD endpoints
 - Sheet operations (read, write, delete rows)
 - API key verification
+- Data model kolom products: `id,name,category,price,compareAt,badge,tagline,desc,features,mockup,accent,demoUrl,compatibility,image,featured`
 
 ## Development Rules
 

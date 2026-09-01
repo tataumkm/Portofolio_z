@@ -1,0 +1,52 @@
+/* ============ KATALOG MARKETPLACE ============ */
+.mk-toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.sort-select{border:1px solid var(--line-strong);background:var(--card);border-radius:999px;padding:9px 16px;font:inherit;font-size:.84rem;font-weight:600;color:var(--ink);cursor:pointer;transition:border-color .25s}
+.sort-select:focus{outline:none;border-color:var(--green)}
+
+.mk-layout{display:grid;grid-template-columns:210px 1fr;gap:clamp(20px,3vw,40px);margin-top:8px}
+
+/* Sidebar kategori */
+.mk-side{padding-right:10px}
+.mk-side-title{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--ink-soft);margin-bottom:10px}
+.mk-cat-list{display:flex;flex-direction:column;gap:2px}
+.mk-side-cat{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-radius:8px;font-size:.9rem;text-align:left;transition:.2s}
+.mk-side-cat em{font-style:normal;font-size:.72rem;color:var(--ink-soft);background:var(--paper2);border-radius:99px;padding:1px 8px}
+.mk-side-cat:hover{background:var(--paper2)}
+.mk-side-cat.on{background:var(--ink);color:var(--paper)}
+.mk-side-cat.on em{background:rgba(244,239,228,.2);color:var(--paper)}
+
+.mk-content{min-width:0}
+.mk-content .filters{margin-bottom:16px}
+
+/* Kartu produk (grid) */
+#rows{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:clamp(16px,2vw,26px)}
+.pcard{display:flex;flex-direction:column;align-items:stretch;gap:0;padding:0;border:1px solid var(--line-strong);border-radius:14px;overflow:hidden;cursor:pointer;background:var(--card);animation:rowIn .55s var(--ease) both;isolation:isolate;transition:box-shadow .3s var(--ease),transform .3s var(--ease)}
+.pcard::before{display:none}
+.pcard:hover{box-shadow:0 18px 40px rgba(24,21,17,.14);transform:translateY(-3px)}
+.pcard:hover>*{color:var(--ink)}
+.pcard:hover .pcard-tag,.pcard:hover .price-old{color:var(--ink-soft)}
+.pthumb{position:relative;width:100%;height:190px;border-radius:0;border:0;border-bottom:1px solid var(--line);overflow:hidden;background:var(--card);display:flex;align-items:center;justify-content:center}
+.pthumb .pthumb-img{width:100%;height:100%;object-fit:cover;display:block}
+.pthumb.mock{pointer-events:none}
+.pthumb .thumb-mock{position:absolute;inset:0;overflow:hidden;transform:scale(1.7);transform-origin:50% 10%;pointer-events:none}
+.pthumb .thumb-mock .mk{font-size:7px}
+.pcard-body{padding:16px 18px 20px;display:flex;flex-direction:column;gap:7px;flex:1}
+.pcard-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pcard-name{font-size:1.25rem;font-family:'Fraunces',serif;font-weight:540;line-height:1.2}
+.pcard-tag{font-size:.84rem;color:var(--ink-soft);line-height:1.45}
+.pcard-price{font-family:'Fraunces',serif;font-weight:560;font-size:1.15rem;margin-top:auto;padding-top:10px}
+
+@media(max-width:900px){
+  .mk-toolbar .search{order:2;width:100%}
+  .mk-layout{grid-template-columns:1fr}
+  .mk-side{display:none} /* pakai chips mobile */
+}
+@media(max-width:560px){
+  .mk-layout{grid-template-columns:1fr}
+  #rows{grid-template-columns:repeat(2,1fr);gap:12px}
+  .pthumb{height:150px}
+  .pcard-body{padding:12px 14px}
+  .pcard-name{font-size:1.05rem}
+  .pcard-price{font-size:1rem}
+  .pcard-tag{font-size:.78rem}
+}

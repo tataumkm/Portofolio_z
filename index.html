@@ -58,23 +58,16 @@
 <section class="sec" id="katalog">
   <div class="sec-head rv">
     <div>
-      <p class="kicker">Katalog Produk</p>
-      <h2>Semua perangkat,<br>satu tempat.</h2>
+      <p class="kicker">Rekomendasi</p>
+      <h2>Pilihan terbaik<br>untuk mulai.</h2>
     </div>
-    <p class="note">Semua aplikasi berjalan di browser — tanpa instal, tanpa aplikasi tambahan. Arahkan kursor ke daftar untuk melihat cuplikan.</p>
+    <p class="note">Beberapa aplikasi pilihan kami. Lihat <a href="products.html" style="color:var(--green);font-weight:600">semua produk</a> untuk katalog lengkap.</p>
   </div>
   <div class="cat-bar rv">
     <div class="filters" id="filters"></div>
-    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-      <div class="search">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20.5 20.5-4.2-4.2"/></svg>
-        <input type="text" id="q" placeholder="Cari produk...">
-      </div>
-      <div class="view-toggle" id="viewToggle" role="group" aria-label="Tampilan katalog">
-        <button data-view="list" class="on" title="Tampilan daftar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-        <button data-view="grid" title="Tampilan kisi"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg></button>
-      </div>
-    </div>
+    <a class="btn sm line" href="products.html">Lihat semua produk
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+    </a>
   </div>
   <div id="rows"></div>
 </section>

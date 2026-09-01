@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tata Umkm — Katalog Produk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/common.css">
+<link rel="stylesheet" href="css/viewer.css">
+<link rel="stylesheet" href="css/products.css">
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="hdr" id="hdr">
+  <a class="brand" href="index.html">
+    <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/></svg>
+    <span id="brandName">Tata Umkm</span>
+  </a>
+  <nav class="hnav">
+    <a href="index.html#katalog">Rekomendasi</a>
+    <a href="index.html#cara">Cara Beli</a>
+    <a href="index.html#kontak">Kontak</a>
+  </nav>
+</header>
+
+<!-- ============ KATALOG MARKETPLACE ============ -->
+<section class="sec" id="katalog">
+  <div class="sec-head">
+    <div>
+      <p class="kicker">Katalog Produk</p>
+      <h2>Semua perangkat,<br>satu tempat.</h2>
+    </div>
+    <p class="note" id="countNote"></p>
+  </div>
+
+  <div class="cat-bar">
+    <div class="mk-toolbar">
+      <div class="search">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20.5 20.5-4.2-4.2"/></svg>
+        <input type="text" id="q" placeholder="Cari produk...">
+      </div>
+      <select id="sort" class="sort-select" aria-label="Urutkan">
+        <option value="populer">Populer</option>
+        <option value="termurah">Harga Terendah</option>
+        <option value="termahal">Harga Tertinggi</option>
+        <option value="az">Nama A–Z</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="mk-layout">
+    <!-- Sidebar kategori (desktop) -->
+    <aside class="mk-side">
+      <p class="mk-side-title">Kategori</p>
+      <div class="mk-cat-list" id="sideCats"></div>
+    </aside>
+
+    <!-- Konten: chips kategori (mobile) + grid -->
+    <div class="mk-content">
+      <div class="filters" id="filters"></div>
+      <div id="rows"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer id="kontak">
+  <a class="foot-base" href="index.html" style="display:inline-flex;align-items:center;gap:8px;color:var(--ink-soft);font-size:.85rem">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 6-6 6 6 6"/></svg>
+    Kembali ke beranda
+  </a>
+</footer>
+
+<!-- ============ DETAIL PRODUK / HOVER / TOAST ============ -->
+<div class="detail" id="detail"></div>
+<div id="hoverCard"><div class="hc-in" id="hcIn"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/products.js"></script>
+</body>
+</html>

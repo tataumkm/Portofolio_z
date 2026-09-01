@@ -125,7 +125,7 @@ function renderProducts() {
     </div>
     <div class="ed-list">${DATA.products.length ? DATA.products.map(p => `
       <div class="ed-item" data-id="${esc(p.id)}">
-        <div class="inf"><b>${esc(p.name)}</b><span>${esc(catLabel(p.category))} · ${rp(p.price)}</span></div>
+        <div class="inf"><b>${esc(p.name)}${p.featured?` <span style="font-size:.62rem;color:var(--green);font-weight:700;letter-spacing:.08em;text-transform:uppercase;vertical-align:middle">★ Unggulan</span>`:''}</b><span>${esc(catLabel(p.category))} · ${rp(p.price)}</span></div>
         <div class="acts">
           <button class="mini-btn" data-act="edit" title="Ubah">${I('pen',14)}</button>
           <button class="mini-btn danger" data-act="del" title="Hapus">${I('trash',14)}</button>
@@ -213,7 +213,7 @@ function openProductModal(id) {
   editingId = id;
   const isNew = id === 'new';
   const p = isNew
-    ? {name:'',category:DATA.categories[0]?.id||'',price:'',compareAt:'',badge:'',tagline:'',desc:'',features:[],mockup:'plain',accent:'#1D5B43',demoUrl:'',compatibility:['laptop','tablet','phone'],image:''}
+    ? {name:'',category:DATA.categories[0]?.id||'',price:'',compareAt:'',badge:'',tagline:'',desc:'',features:[],mockup:'plain',accent:'#1D5B43',demoUrl:'',compatibility:['laptop','tablet','phone'],image:'',featured:false}
     : DATA.products.find(x=>x.id===id);
   if (!p) { editingId = null; return; }
 
@@ -245,6 +245,12 @@ function openProductModal(id) {
         }).join('')}
       </div>
     `, 'centang yang didukung (boleh semua / satu)')}
+    ${F('Unggulan', `
+      <label style="display:inline-flex;align-items:center;gap:9px;font-size:.9rem;font-weight:500;cursor:pointer">
+        <input type="checkbox" id="f-featured" ${p.featured?'checked':''}>
+        Tampilkan di halaman utama sebagai rekomendasi / best seller
+      </label>
+    `)}
     <div class="ed-form-foot">
       <button class="btn sm line" id="cancelBtn">Batal</button>
       <button class="btn sm solid" id="saveBtn">${I('check',15)} Simpan</button>
@@ -281,7 +287,8 @@ async function doSave() {
     accent: (document.querySelector('input[name=f-accent]:checked')||{}).value || '#1D5B43',
     demoUrl: $('#f-url').value.trim(),
     compatibility: Array.from(document.querySelectorAll('input[name=f-compat]:checked')).map(x=>x.value),
-    image: $('#f-image').value.trim()
+    image: $('#f-image').value.trim(),
+    featured: !!document.querySelector('#f-featured')?.checked
   };
 
   saving = true;

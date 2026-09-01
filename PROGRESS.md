@@ -37,3 +37,12 @@ Log perubahan file oleh Agent AI. Format: tanggal, file, deskripsi perubahan.
 | 27 | 2026-09-01 | css/viewer.css | Fitur — Thumbnail (.pthumb/.thumb-mock), grid layout, testimonial grid, FAQ accordion, view-toggle; hapus .own-btn |
 | 28 | 2026-09-01 | index.html | Fitur — Section testimoni + FAQ, toggle grid/list, hapus block "Untuk pemilik toko" & title phantom logo |
 | 29 | 2026-09-01 | js/editor.js | Fitur — Field `image` produk + tab kelola testimoni (CRUD modal) |
+| 30 | 2026-09-01 | css/viewer.css | Fix — Grid thumbnail aspect-ratio 16/10 + absolute overlay mockup (perbaiki kolaps/aneh); reset hover color grid agar teks terbaca |
+| 31 | 2026-09-01 | gas/Code.gs | Fitur — Kolom `featured` (boolean) di products + normalisasi parse |
+| 32 | 2026-09-01 | js/editor.js | Fitur — Checkbox "Unggulan/Best seller" di form produk + badge ★ di daftar |
+| 33 | 2026-09-01 | index.html | Refactor — Katalog kembali list teks-only; hanya tampil produk `featured`; CTA "Lihat semua produk" → products.html |
+| 34 | 2026-09-01 | js/viewer.js | Refactor — renderRows hanya produk featured (list teks-only); hapus grid list/filter search/devIcons/productThumb/viewToggle |
+| 35 | 2026-09-01 | css/viewer.css | Refactor — Revert `.prow` ke teks-only (70px num + 1fr + auto); hapus thumb/grid/view-toggle |
+| 36 | 2026-09-01 | products.html | Baru — Halaman katalog marketplace (header+sidebar kategori+grid+toolbar search/sort+detail overlay) |
+| 37 | 2026-09-01 | css/products.css | Baru — Style marketplace (.mk-layout, .mk-side, .pcard grid, toolbar sort, responsive) |
+| 38 | 2026-09-01 | js/products.js | Baru — Logic marketplace mandiri: grid kartu, filter kategori, sort, search, detail overlay (reuse mockup/device, duplikasi dipisah) |

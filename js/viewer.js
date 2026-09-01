@@ -33,9 +33,7 @@ const ICONS = {
 const I = (n, s=18) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none">${ICONS[n]}</svg>`;
 
 let DATA;
-const state = { cat: 'all', q: '', view: 'list' };
-const LAYOUT_KEY = 'tataumkm_view_layout';
-try { state.view = localStorage.getItem(LAYOUT_KEY) || 'list'; } catch(e){}
+const state = { cat: 'all' };
 const finePointer = matchMedia('(pointer:fine)').matches;
 
 /* ═══════════════════════════════════════════════════════════
@@ -300,88 +298,38 @@ function renderMarquee(){
 }
 
 function renderFilters(){
-  const count = id => id==='all' ? DATA.products.length : DATA.products.filter(p=>p.category===id).length;
+  const base = DATA.products.filter(p => p.featured);
+  const count = id => id==='all' ? base.length : base.filter(p=>p.category===id).length;
   let html = `<button class="fbtn ${state.cat==='all'?'on':''}" data-cat="all">Semua<small>${count('all')}</small></button>`;
   html += DATA.categories.map(c => `<button class="fbtn ${state.cat===c.id?'on':''}" data-cat="${c.id}">${esc(c.label)}<small>${count(c.id)}</small></button>`).join('');
   $('#filters').innerHTML = html;
 }
 
-/* Ikon perangkat yang didukung produk (untuk baris katalog) */
-const DEV_MINI = { laptop:'laptop', tablet:'tablet', phone:'phone' };
-function devIcons(p){
-  const comp = (p.compatibility && p.compatibility.length) ? p.compatibility : ['laptop','tablet','phone'];
-  return `<span class="prow-dev" title="Kompatibel: ${comp.map(d=>DEV_MINI[d]||d).join(', ')}">${comp.map(d=>I(d,13)).join('')}</span>`;
-}
-
-/* Thumbnail produk — URL gambar, fallback mockup DOM (non-interaktif) */
-function productThumb(p, view){
-  if (p.image) {
-    return `<span class="pthumb" data-view="${view}"><img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" class="pthumb-img" onerror="this.closest('.pthumb').classList.add('mock');this.remove()"></span>`;
-  }
-  return `<span class="pthumb mock" data-view="${view}"><span class="thumb-mock">${mockupHTML(p)}</span></span>`;
-}
-
 function renderRows(){
-  const q = state.q.trim().toLowerCase();
+  // Halaman utama hanya menampilkan produk unggulan (featured)
   const list = DATA.products.filter(p =>
-    (state.cat==='all' || p.category===state.cat) &&
-    (!q || (p.name+' '+p.tagline+' '+catLabel(p.category)).toLowerCase().includes(q)));
+    p.featured && (state.cat==='all' || p.category===state.cat));
   const rows = $('#rows');
   if(!list.length){
-    rows.innerHTML = `<div class="empty"><p class="serif">Tidak ada produk yang cocok.</p><p>Coba kata kunci lain, atau <button id="resetF">atur ulang filter</button>.</p></div>`;
-    const rb = $('#resetF'); if(rb) rb.onclick = () => { state.cat='all'; state.q=''; $('#q').value=''; renderFilters(); renderRows(); };
+    rows.innerHTML = `<div class="empty"><p class="serif">Belum ada rekomendasi.</p><p>Ikuti <a href="products.html" style="color:var(--green);font-weight:600">daftar produk</a> untuk katalog lengkap.</p></div>`;
     return;
   }
-
-  rows.dataset.view = state.view;
-
-  if (state.view === 'grid') {
-    rows.innerHTML = list.map((p,i) => `
-      <article class="prow prow-card" data-id="${esc(p.id)}" style="animation-delay:${Math.min(i*45,400)}ms">
-        ${productThumb(p,'grid')}
-        <div class="prow-body">
-          <div class="prow-top">
-            <span class="chip">${esc(catLabel(p.category))}</span>
-            ${devIcons(p)}
-          </div>
-          <h3 class="prow-name">${esc(p.name)}${p.badge?`<span class="badge">${esc(p.badge)}</span>`:''}</h3>
-          <p class="prow-tag">${esc(p.tagline)}</p>
-          <span class="prow-price">${rp(p.price)}${p.compareAt?`<span class="price-old">${rp(p.compareAt)}</span>`:''}</span>
-        </div>
+  rows.innerHTML = list.map((p,i) => `
+    <article class="prow" data-id="${esc(p.id)}" style="animation-delay:${Math.min(i*45,400)}ms">
+      <span class="prow-num">${String(i+1).padStart(2,'0')}</span>
+      <div class="prow-main">
+        <h3 class="prow-name">${esc(p.name)}${p.badge?`<span class="badge">${esc(p.badge)}</span>`:''}</h3>
+        <p class="prow-tag">${esc(p.tagline)}</p>
+      </div>
+      <div class="prow-meta">
+        <span class="chip">${esc(catLabel(p.category))}</span>
+        <span class="prow-price">${rp(p.price)}${p.compareAt?`<span class="price-old">${rp(p.compareAt)}</span>`:''}</span>
         <span class="prow-arr">${I('up',18)}</span>
-      </article>`).join('');
-  } else {
-    rows.innerHTML = list.map((p,i) => `
-      <article class="prow" data-id="${esc(p.id)}" style="animation-delay:${Math.min(i*45,400)}ms">
-        ${productThumb(p,'list')}
-        <div class="prow-main">
-          <h3 class="prow-name">${esc(p.name)}${p.badge?`<span class="badge">${esc(p.badge)}</span>`:''}</h3>
-          <p class="prow-tag">${esc(p.tagline)}</p>
-        </div>
-        <div class="prow-meta">
-          <span class="chip">${esc(catLabel(p.category))}</span>
-          ${devIcons(p)}
-          <span class="prow-price">${rp(p.price)}${p.compareAt?`<span class="price-old">${rp(p.compareAt)}</span>`:''}</span>
-          <span class="prow-arr">${I('up',18)}</span>
-        </div>
-      </article>`).join('');
-  }
+      </div>
+    </article>`).join('');
 }
 
-function setView(v){
-  state.view = (v === 'grid') ? 'grid' : 'list';
-  try { localStorage.setItem(LAYOUT_KEY, state.view); } catch(e){}
-  document.querySelectorAll('#viewToggle button').forEach(b => b.classList.toggle('on', b.dataset.view === state.view));
-  renderRows();
-  observeRv();
-}
-
-function syncViewToggle(){
-  const tok = document.querySelector('#viewToggle');
-  if (tok) tok.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.view === state.view));
-}
-
-function renderAll(){ renderMeta(); renderMarquee(); renderFilters(); renderRows(); renderTestimonials(); syncViewToggle(); }
+function renderAll(){ renderMeta(); renderMarquee(); renderFilters(); renderRows(); renderTestimonials(); }
 
 /* ═══════════════════════════════════════════════════════════
    TESTIMONI
@@ -574,13 +522,6 @@ $('#rows').addEventListener('click', e => {
 $('#filters').addEventListener('click', e => {
   const b = e.target.closest('.fbtn'); if(!b) return;
   state.cat = b.dataset.cat; renderFilters(); renderRows();
-});
-let qT; $('#q').addEventListener('input', e => {
-  clearTimeout(qT); qT = setTimeout(()=>{ state.q = e.target.value; renderRows(); }, 140);
-});
-$('#viewToggle').addEventListener('click', e => {
-  const b = e.target.closest('button[data-view]'); if(!b) return;
-  setView(b.dataset.view);
 });
 
 document.addEventListener('keydown', e => {

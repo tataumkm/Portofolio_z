@@ -144,6 +144,8 @@ function getAllData() {
       if (!product.compatibility || product.compatibility.length === 0) {
         product.compatibility = ['laptop', 'tablet', 'phone'];
       }
+      // Normalisasi featured (boolean)
+      product.featured = (String(product.featured || '').toLowerCase() === 'true' || product.featured === true || product.featured === 1 || product.featured === 'TRUE') ? true : false;
       products.push(product);
     }
   }
@@ -181,7 +183,7 @@ function saveProduct(data) {
   // Buat sheet kalau belum ada
   if (!sheet) {
     sheet = ss.insertSheet('products');
-    sheet.appendRow(['id', 'name', 'category', 'price', 'compareAt', 'badge', 'tagline', 'desc', 'features', 'mockup', 'accent', 'demoUrl', 'compatibility', 'image']);
+    sheet.appendRow(['id', 'name', 'category', 'price', 'compareAt', 'badge', 'tagline', 'desc', 'features', 'mockup', 'accent', 'demoUrl', 'compatibility', 'image', 'featured']);
   }
 
   // Features → JSON string
@@ -209,7 +211,8 @@ function saveProduct(data) {
     data.accent || '#1D5B43',
     data.demoUrl || '',
     compatStr,
-    data.image || ''
+    data.image || '',
+    data.featured ? true : false
   ];
 
   // Cari apakah produk sudah ada
@@ -374,7 +377,7 @@ function setupSheets() {
   let prodSheet = ss.getSheetByName('products');
   if (!prodSheet) {
     prodSheet = ss.insertSheet('products');
-    prodSheet.appendRow(['id', 'name', 'category', 'price', 'compareAt', 'badge', 'tagline', 'desc', 'features', 'mockup', 'accent', 'demoUrl', 'compatibility', 'image']);
+    prodSheet.appendRow(['id', 'name', 'category', 'price', 'compareAt', 'badge', 'tagline', 'desc', 'features', 'mockup', 'accent', 'demoUrl', 'compatibility', 'image', 'featured']);
   }
 
   // Buat sheet "testimonials" jika belum ada
