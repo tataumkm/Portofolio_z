@@ -269,7 +269,7 @@ window.addEventListener('resize', fitDevice);
    RENDER UTAMA
    ═══════════════════════════════════════════════════════════ */
 const catLabel = id => (DATA.categories.find(c => c.id === id) || {}).label || id;
-const waLink  = msg => `https://wa.me/${(DATA.site.whatsapp||'').replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;
+const waLink  = msg => `https://wa.me/${String(DATA.site.whatsapp||'').replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;
 
 function renderMeta(){
   const s = DATA.site;
@@ -281,7 +281,7 @@ function renderMeta(){
   $('#heroSub').textContent = s.sub;
   $('#statP').textContent = DATA.products.length;
   $('#statC').textContent = DATA.categories.length;
-  $('#footWaNum').textContent = '+' + (s.whatsapp||'').replace(/\D/g,'');
+  $('#footWaNum').textContent = '+' + String(s.whatsapp||'').replace(/\D/g,'');
   $('#footHours').textContent = s.hours;
   $('#footLoc').textContent = s.location;
   $('#footNote').textContent = s.note;
