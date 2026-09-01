@@ -63,6 +63,10 @@ function doPost(e) {
         return jsonResponse(deleteProduct(req.data.id));
       case 'saveSite':
         return jsonResponse(saveSite(req.data));
+      case 'saveTestimonial':
+        return jsonResponse(saveTestimonial(req.data));
+      case 'deleteTestimonial':
+        return jsonResponse(deleteTestimonial(req.data.id));
       default:
         return jsonResponse({ error: 'Unknown action' }, 400);
     }
@@ -144,7 +148,23 @@ function getAllData() {
     }
   }
 
-  return { site, categories, products };
+  // Baca testimonials
+  const tstSheet = ss.getSheetByName('testimonials');
+  const testimonials = [];
+  if (tstSheet) {
+    const tstData = tstSheet.getDataRange().getValues();
+    for (let i = 1; i < tstData.length; i++) {
+      if (!tstData[i][0]) continue;
+      testimonials.push({
+        id: tstData[i][0],
+        name: tstData[i][1] || '',
+        usaha: tstData[i][2] || '',
+        quote: tstData[i][3] || ''
+      });
+    }
+  }
+
+  return { site, categories, products, testimonials };
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -161,7 +181,7 @@ function saveProduct(data) {
   // Buat sheet kalau belum ada
   if (!sheet) {
     sheet = ss.insertSheet('products');
-    sheet.appendRow(['id', 'name', 'category', 'price', 'compareAt', 'badge', 'tagline', 'desc', 'features', 'mockup', 'accent', 'demoUrl', 'compatibility']);
+    sheet.appendRow(['id', 'name', 'category', 'price', 'compareAt', 'badge', 'tagline', 'desc', 'features', 'mockup', 'accent', 'demoUrl', 'compatibility', 'image']);
   }
 
   // Features → JSON string
@@ -188,7 +208,8 @@ function saveProduct(data) {
     data.mockup || 'plain',
     data.accent || '#1D5B43',
     data.demoUrl || '',
-    compatStr
+    compatStr,
+    data.image || ''
   ];
 
   // Cari apakah produk sudah ada
@@ -258,6 +279,48 @@ function saveSite(data) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// SAVE TESTIMONIAL — Insert atau update
+// ═══════════════════════════════════════════════════════════
+function saveTestimonial(data) {
+  if (!data || (!data.name && !data.quote)) {
+    return { error: 'Nama dan kutipan wajib diisi' };
+  }
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName('testimonials');
+  if (!sheet) {
+    sheet = ss.insertSheet('testimonials');
+    sheet.appendRow(['id', 'name', 'usaha', 'quote']);
+  }
+
+  const id = data.id && data.id !== 'new' ? data.id : 't-' + Date.now();
+  const row = [id, data.name || '', data.usaha || '', data.quote || ''];
+
+  const existingRowIndex = findRowIndex(sheet, id);
+  if (existingRowIndex > 0) {
+    sheet.getRange(existingRowIndex, 1, 1, row.length).setValues([row]);
+  } else {
+    sheet.appendRow(row);
+  }
+
+  return { success: true, testimonial: { id, name: data.name, usaha: data.usaha, quote: data.quote } };
+}
+
+// ═══════════════════════════════════════════════════════════
+// DELETE TESTIMONIAL
+// ═══════════════════════════════════════════════════════════
+function deleteTestimonial(id) {
+  if (!id) return { error: 'ID testimoni wajib diisi' };
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('testimonials');
+  if (!sheet) return { error: 'Sheet testimonials tidak ditemukan' };
+  const rowIndex = findRowIndex(sheet, id);
+  if (rowIndex <= 0) return { error: 'Testimoni tidak ditemukan' };
+  sheet.deleteRow(rowIndex);
+  return { success: true, deleted: id };
+}
+
+// ═══════════════════════════════════════════════════════════
 // UTILITY — Cari baris berdasarkan kolom pertama (ID)
 // ═══════════════════════════════════════════════════════════
 function findRowIndex(sheet, id) {
@@ -311,7 +374,14 @@ function setupSheets() {
   let prodSheet = ss.getSheetByName('products');
   if (!prodSheet) {
     prodSheet = ss.insertSheet('products');
-    prodSheet.appendRow(['id', 'name', 'category', 'price', 'compareAt', 'badge', 'tagline', 'desc', 'features', 'mockup', 'accent', 'demoUrl', 'compatibility']);
+    prodSheet.appendRow(['id', 'name', 'category', 'price', 'compareAt', 'badge', 'tagline', 'desc', 'features', 'mockup', 'accent', 'demoUrl', 'compatibility', 'image']);
+  }
+
+  // Buat sheet "testimonials" jika belum ada
+  let tstSheet = ss.getSheetByName('testimonials');
+  if (!tstSheet) {
+    tstSheet = ss.insertSheet('testimonials');
+    tstSheet.appendRow(['id', 'name', 'usaha', 'quote']);
   }
 
   Logger.log('Setup selesai! Semua sheet sudah dibuat dengan data awal.');

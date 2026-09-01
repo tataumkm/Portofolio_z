@@ -95,6 +95,17 @@ async function saveSite(siteData) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// TESTIMONI — Admin CRUD
+// ═══════════════════════════════════════════════════════════
+async function saveTestimonial(tData) {
+  return postAction('saveTestimonial', tData);
+}
+
+async function deleteTestimonial(tId) {
+  return postAction('deleteTestimonial', { id: tId });
+}
+
+// ═══════════════════════════════════════════════════════════
 // UTILITY — Format harga Indonesia
 // ═══════════════════════════════════════════════════════════
 function rp(n) {

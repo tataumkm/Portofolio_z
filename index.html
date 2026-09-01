@@ -14,7 +14,7 @@
 
 <!-- ============ HEADER ============ -->
 <header class="hdr" id="hdr">
-  <div class="brand" id="brandBtn" title="Klik 3x untuk membuka editor">
+  <div class="brand" id="brandBtn">
     <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/></svg>
     <span id="brandName">Tata Umkm</span>
   </div>
@@ -65,9 +65,15 @@
   </div>
   <div class="cat-bar rv">
     <div class="filters" id="filters"></div>
-    <div class="search">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20.5 20.5-4.2-4.2"/></svg>
-      <input type="text" id="q" placeholder="Cari produk...">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div class="search">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20.5 20.5-4.2-4.2"/></svg>
+        <input type="text" id="q" placeholder="Cari produk...">
+      </div>
+      <div class="view-toggle" id="viewToggle" role="group" aria-label="Tampilan katalog">
+        <button data-view="list" class="on" title="Tampilan daftar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <button data-view="grid" title="Tampilan kisi"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg></button>
+      </div>
     </div>
   </div>
   <div id="rows"></div>
@@ -104,6 +110,50 @@
   </div>
 </section>
 
+<!-- ============ TESTIMONI ============ -->
+<section class="sec" id="tst" style="padding-top:0">
+  <div class="sec-head rv">
+    <div>
+      <p class="kicker">Kata Mereka</p>
+      <h2>Dipercaya&nbsp;pemilik usaha.</h2>
+    </div>
+    <p class="note">Aplikasi yang berdampak pada usaha sehari-hari — langsung dari pemakainya.</p>
+  </div>
+  <div class="tst-grid" id="tstGrid"></div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="sec" id="faq" style="padding-top:0">
+  <div class="sec-head rv">
+    <div>
+      <p class="kicker">Pertanyaan Umum</p>
+      <h2>Sebelum Anda membeli.</h2>
+    </div>
+  </div>
+  <div class="faq rv">
+    <details>
+      <summary>Bagaimana cara menerima aplikasi setelah bayar?</summary>
+      <div>Setelah pembayaran terkonfirmasi, tautan akses aplikasi dan panduan pemakaian (PDF) dikirim seketika lewat WhatsApp. Aplikasi berjalan langsung di browser — tanpa instal.</div>
+    </details>
+    <details>
+      <summary>Apakah aplikasi bisa disesuaikan (custom)?</summary>
+      <div>Ya. Selain produk siap pakai, kami menerima pesanan aplikasi custom. <b>Ceritakan kebutuhan Anda</b>, dan kami beri penawaran — diskusinya gratis.</div>
+    </details>
+    <details>
+      <summary>Ada garansi atau perbaikan jika rusak?</summary>
+      <div>Setiap produk mencakup <b>garansi perbaikan 30 hari</b>. Selama masa itu, kendala teknis kami perbaiki tanpa biaya tambahan. Update minor juga gratis selamanya.</div>
+    </details>
+    <details>
+      <summary>Metode pembayaran apa saja?</summary>
+      <div>Pembayaran lewat <b>QRIS</b> atau <b>transfer bank</b>. Setelah terbayar, akses dikirim seketika.</div>
+    </details>
+    <details>
+      <summary>Apakah ada biaya langganan bulanan?</summary>
+      <div>Tidak ada. Semua produk adalah <b>bayar sekali</b> — milik Anda selamanya. Tidak ada biaya tersembunyi.</div>
+    </details>
+  </div>
+</section>
+
 <!-- ============ BAND CTA ============ -->
 <section class="band">
   <svg class="band-ast" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/></svg>
@@ -128,14 +178,8 @@
     <div><b>Navigasi</b>
       <a href="#katalog">Katalog produk</a>
       <a href="#cara">Cara pembelian</a>
+      <a href="#faq">Pertanyaan umum</a>
       <a href="#" id="footCustom">Aplikasi custom</a>
-    </div>
-    <div><b>Untuk pemilik toko</b>
-      <p style="max-width:32ch;font-size:.88rem;color:var(--ink-soft)">Kelola produk &amp; pengaturan situs tanpa menyentuh kode.</p>
-      <button class="own-btn" id="ownBtn">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h9M17.5 8H20M4 16h2.5M11 16h9"/><circle cx="15" cy="8" r="2"/><circle cx="8.5" cy="16" r="2"/></svg>
-        Buka editor produk &nbsp;<kbd>Ctrl</kbd> + <kbd>E</kbd>
-      </button>
     </div>
   </div>
   <div class="foot-base">

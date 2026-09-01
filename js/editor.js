@@ -1,8 +1,8 @@
 /**
  * Tata Umkm — Editor Logic
  *
- * Handle: login, render produk list + form, CRUD,
- * pengaturan situs, responsive behavior.
+ * Handle: login, daftar produk, form produk (modal), CRUD,
+ * pengaturan situs (modal), responsive behavior.
  */
 
 /* ═══════════════════════════════════════════════════════════
@@ -18,13 +18,11 @@ const ICONS = {
   plus:'<path d="M12 5v14M5 12h14"/>',
   pen:'<path d="M13 20h8M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>',
   trash:'<path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/>',
-  left:'<path d="m14.5 6-6 6 6 6"/>',
   ast:'<path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/>'
 };
 const I = (n, s=18) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none">${ICONS[n]}</svg>`;
 
 function rp(n) { return 'Rp ' + (n||0).toLocaleString('id-ID'); }
-function fk(n) { return (n||0).toLocaleString('id-ID'); }
 function esc(s) {
   return String(s??'').replace(/[&<>"']/g, c =>
     ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]
@@ -37,31 +35,19 @@ const ACCENTS = ['#1D5B43','#B4562E','#1F5F66','#6B3A56','#8C6D14','#37424E','#1
 let DATA = { site:{}, categories:[], products:[] };
 let editingId = null;
 let dwTab = 'produk';
+let saving = false;
 
 /* ═══════════════════════════════════════════════════════════
    LOGIN
    ═══════════════════════════════════════════════════════════ */
 function checkLogin() {
   const key = localStorage.getItem(LS_KEY);
-  if (key) {
-    // Coba load data dengan key yang ada
-    tryLoadData(key);
-  }
+  if (key) tryLoadData(key);
 }
 
 async function tryLoadData(key) {
-  // Simpan key sementara
-  localStorage.setItem(LS_KEY, key);
-
-  // Verifikasi API key dulu — baru boleh masuk
   const valid = await verifyApiKey(key);
-  if (!valid) {
-    localStorage.removeItem(LS_KEY);
-    localStorage.removeItem(LS_DATA);
-    showLogin();
-    return;
-  }
-
+  if (!valid) { clearSession(); showLogin(); return; }
   localStorage.setItem(LS_KEY, key);
 
   const result = await fetchData();
@@ -70,11 +56,13 @@ async function tryLoadData(key) {
     localStorage.setItem(LS_DATA, JSON.stringify(DATA));
     showEditor();
   } else {
-    // Key valid tapi data gagal diambil
-    localStorage.removeItem(LS_KEY);
-    localStorage.removeItem(LS_DATA);
-    showLogin();
+    clearSession(); showLogin();
   }
+}
+
+function clearSession() {
+  localStorage.removeItem(LS_KEY);
+  localStorage.removeItem(LS_DATA);
 }
 
 function showLogin() {
@@ -92,148 +80,190 @@ async function doLogin() {
   const input = $('#loginKey');
   const err = $('.login-card .err');
   const key = input.value.trim();
-
-  if (!key) {
-    err.textContent = 'API key wajib diisi';
-    err.classList.add('show');
-    return;
-  }
+  if (!key) { err.textContent = 'API key wajib diisi'; err.classList.add('show'); return; }
 
   err.classList.remove('show');
   const btn = $('#loginBtn');
-  btn.textContent = 'Memproses...';
-  btn.disabled = true;
-
+  btn.disabled = true; btn.textContent = 'Memproses...';
   await tryLoadData(key);
-
-  btn.textContent = 'Masuk';
-  btn.disabled = false;
-
+  btn.disabled = false; btn.textContent = 'Masuk';
   if (!$('.editor-screen').classList.contains('active')) {
-    err.textContent = 'API key tidak valid';
-    err.classList.add('show');
+    err.textContent = 'API key tidak valid'; err.classList.add('show');
   }
 }
 
-function doLogout() {
-  localStorage.removeItem(LS_KEY);
-  localStorage.removeItem(LS_DATA);
-  showLogin();
-}
+function doLogout() { clearSession(); showLogin(); }
 
 /* ═══════════════════════════════════════════════════════════
-   RENDER UTAMA
+   RENDER UTAMA — pilih tab
    ═══════════════════════════════════════════════════════════ */
 const catLabel = id => (DATA.categories.find(c => c.id === id) || {}).label || id;
 
-function renderAll() {
-  renderList();
-  renderEmpty();
-}
+function renderAll() { switchTab(dwTab); }
 
-function renderEmpty() {
-  if (editingId === null && DATA.products.length === 0) {
-    $('#edMain').innerHTML = `
-      <div class="ed-empty">
-        <p class="serif">Belum ada produk</p>
-        <p>Klik tombol "Tambah baru" di sidebar untuk menambah produk pertama.</p>
-      </div>`;
-  }
+function switchTab(tab) {
+  dwTab = tab;
+  const nav = document.querySelector('#tabNav');
+  if (nav) nav.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  if (tab === 'produk') renderProducts();
+  else if (tab === 'situs') renderSettings();
+  else if (tab === 'testimoni') renderTestimonialsConfig();
 }
 
 /* ═══════════════════════════════════════════════════════════
-   SIDEBAR — List Produk
+   TAB PRODUK
    ═══════════════════════════════════════════════════════════ */
-function renderList() {
-  const list = $('#edList');
-  if (!list) return;
-
-  list.innerHTML = `
-    <button class="ed-add-btn" id="addBtn">${I('plus',17)} Tambah baru</button>
-    ${DATA.products.map(p => `
-      <div class="ed-item">
+function renderProducts() {
+  const main = $('#edMain');
+  main.innerHTML = `
+    <div class="ed-list-head">
+      <div class="left">
+        <h2>Produk</h2>
+        <p>${DATA.products.length} produk</p>
+      </div>
+      <button class="ed-new-btn" id="newBtn">${I('plus',15)} Tambah</button>
+    </div>
+    <div class="ed-list">${DATA.products.length ? DATA.products.map(p => `
+      <div class="ed-item" data-id="${esc(p.id)}">
         <div class="inf"><b>${esc(p.name)}</b><span>${esc(catLabel(p.category))} · ${rp(p.price)}</span></div>
         <div class="acts">
-          <button class="mini-btn" data-act="edit" data-id="${esc(p.id)}" title="Ubah">${I('pen',14)}</button>
-          <button class="mini-btn danger" data-act="del" data-id="${esc(p.id)}" title="Hapus">${I('trash',14)}</button>
+          <button class="mini-btn" data-act="edit" title="Ubah">${I('pen',14)}</button>
+          <button class="mini-btn danger" data-act="del" title="Hapus">${I('trash',14)}</button>
         </div>
-      </div>`).join('')}`;
+      </div>`).join('') : `<div class="ed-empty"><p class="serif">Belum ada produk</p><p>Klik "Tambah" untuk membuat produk pertama.</p></div>`}
+    </div>`;
 
-  // Bind events
-  $('#addBtn').onclick = () => startEdit('new');
-  list.querySelectorAll('[data-act="edit"]').forEach(btn => {
-    btn.onclick = () => startEdit(btn.dataset.id);
+  $('#newBtn').onclick = () => openProductModal('new');
+  main.querySelectorAll('.ed-item').forEach(item => {
+    const id = item.dataset.id;
+    item.addEventListener('click', e => {
+      const act = e.target.closest('[data-act]');
+      if (act) {
+        if (act.dataset.act === 'del') { e.stopPropagation(); confirmDelete(id); }
+        else openProductModal(id);
+      } else {
+        openProductModal(id);
+      }
+    });
   });
-  list.querySelectorAll('[data-act="del"]').forEach(btn => {
-    btn.onclick = () => confirmDelete(btn.dataset.id);
-  });
+
+  // Bind tab (produk/situs) — taruh di header tetap
+  bindTabs();
 }
 
 /* ═══════════════════════════════════════════════════════════
-   FORM PRODUK
+   TAB SITUS
+   ═══════════════════════════════════════════════════════════ */
+function renderSettings() {
+  const main = $('#edMain');
+  const s = DATA.site;
+  const rows = [
+    ['brand', 'Nama brand'],
+    ['tagline', 'Judul hero'],
+    ['whatsapp', 'Nomor WhatsApp'],
+    ['location', 'Lokasi'],
+    ['hours', 'Jam operasional'],
+    ['note', 'Catatan footer']
+  ];
+  main.innerHTML = `
+    <div class="ed-list-head">
+      <div class="left">
+        <h2>Pengaturan Situs</h2>
+        <p>Klik baris untuk mengubah</p>
+      </div>
+    </div>
+    <div class="ed-settings">
+      ${rows.map(([k,label]) => `
+        <div class="ed-settings-row" data-key="${k}">
+          <span class="lbl">${label}</span>
+          <span class="val">${esc(String(s[k]||'')||'—')}</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        </div>`).join('')}
+    </div>`;
+
+  main.querySelectorAll('.ed-settings-row').forEach(row => {
+    row.addEventListener('click', () => openSettingModal(row.dataset.key));
+  });
+  bindTabs();
+}
+
+/* Tabs shared — render di atas konten */
+function bindTabs() {
+  let nav = document.querySelector('#tabNav');
+  if (!nav) {
+    nav = document.createElement('nav');
+    nav.id = 'tabNav';
+    nav.className = 'ed-tabs';
+    const main = $('#edMain');
+    main.insertBefore(nav, main.firstChild);
+  }
+  nav.innerHTML = `
+    <button class="${dwTab==='produk'?'on':''}" data-tab="produk">Produk</button>
+    <button class="${dwTab==='situs'?'on':''}" data-tab="situs">Pengaturan Situs</button>
+    <button class="${dwTab==='testimoni'?'on':''}" data-tab="testimoni">Testimoni</button>`;
+  nav.querySelectorAll('button').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FORM PRODUK — modal
    ═══════════════════════════════════════════════════════════ */
 const F = (label, inner, hint='') => `<div class="fld"><label>${label}${hint?`<span class="hint"> — ${hint}</span>`:''}</label>${inner}</div>`;
 
-function startEdit(id) {
+function openProductModal(id) {
   editingId = id;
-  renderForm();
-}
+  const isNew = id === 'new';
+  const p = isNew
+    ? {name:'',category:DATA.categories[0]?.id||'',price:'',compareAt:'',badge:'',tagline:'',desc:'',features:[],mockup:'plain',accent:'#1D5B43',demoUrl:'',compatibility:['laptop','tablet','phone'],image:''}
+    : DATA.products.find(x=>x.id===id);
+  if (!p) { editingId = null; return; }
 
-function renderForm() {
-  const p = editingId === 'new'
-    ? {name:'',category:DATA.categories[0]?.id||'',price:'',compareAt:'',badge:'',tagline:'',desc:'',features:[],mockup:'plain',accent:'#1D5B43',demoUrl:'',compatibility:['laptop','tablet','phone']}
-    : DATA.products.find(x=>x.id===editingId);
-
-  if (!p && editingId !== 'new') { editingId = null; renderList(); return; }
-
-  const main = $('#edMain');
-  main.innerHTML = `
-    <button class="back-link" id="formBack">${I('left',14)} Kembali ke daftar</button>
-    <h2 style="font-size:1.6rem;margin-bottom:20px">${editingId==='new'?'Tambah Produk Baru':'Ubah Produk'}</h2>
-    ${F('Nama produk', `<input id="f-name" value="${esc(p.name)}" placeholder="mis. POS Kopi & Cafe">`)}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+  $('#editModalTitle').textContent = isNew ? 'Tambah Produk' : 'Ubah Produk';
+  $('#editFormBody').innerHTML = `
+    ${F('Nama produk', `<input id="f-name" value="${esc(p.name)}" placeholder="mis. POS Kopi & Cafe" autofocus>`)}
+    <div class="fld-grid">
       ${F('Kategori', `<select id="f-cat">${DATA.categories.map(c=>`<option value="${c.id}" ${p.category===c.id?'selected':''}>${esc(c.label)}</option>`).join('')}</select>`)}
       ${F('Harga (Rp)', `<input id="f-price" type="number" min="0" value="${p.price||''}" placeholder="149000">`)}
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      ${F('Harga coret (ops.)', `<input id="f-cmp" type="number" min="0" value="${p.compareAt||''}" placeholder="kosongkan bila tidak ada">`)}
-      ${F('Lencana', `<select id="f-badge"><option value="">— tanpa lencana —</option>${['Terlaris','Baru','Promo'].map(b=>`<option ${p.badge===b?'selected':''}>${b}</option>`).join('')}</select>`)}
+    <div class="fld-grid">
+      ${F('Harga coret (ops.)', `<input id="f-cmp" type="number" min="0" value="${p.compareAt||''}" placeholder="0">`)}
+      ${F('Lencana', `<select id="f-badge"><option value="">— tanpa —</option>${['Terlaris','Baru','Promo'].map(b=>`<option ${p.badge===b?'selected':''}>${b}</option>`).join('')}</select>`)}
     </div>
-    ${F('Tagline singkat', `<input id="f-tag" value="${esc(p.tagline)}" placeholder="satu kalimat kecil di bawah nama">`)}
+    ${F('Tagline singkat', `<input id="f-tag" value="${esc(p.tagline)}" placeholder="satu kalimat kecil">`)}
     ${F('Deskripsi', `<textarea id="f-desc">${esc(p.desc)}</textarea>`)}
     ${F('Fitur (satu per baris)', `<textarea id="f-feat">${esc((p.features||[]).join('\\n'))}</textarea>`)}
-    ${F('Jenis preview', `<select id="f-mk">${MOCK_OPTS.map(m=>`<option value="${m[0]}" ${p.mockup===m[0]?'selected':''}>${m[1]}</option>`).join('')}</select>`, 'tampilan tiruan di halaman detail')}
+    <div class="fld-grid">
+      ${F('Jenis preview', `<select id="f-mk">${MOCK_OPTS.map(m=>`<option value="${m[0]}" ${p.mockup===m[0]?'selected':''}>${m[1]}</option>`).join('')}</select>`)}
+      ${F('URL demo (ops.)', `<input id="f-url" value="${esc(p.demoUrl||'')}" placeholder="https://...">`)}
+    </div>
+    ${F('URL gambar produk (ops.)', `<input id="f-image" value="${esc(p.image||'')}" placeholder="https://.../screenshot.png">`, 'screenshot asli produk. Kosongkan untuk pakai preview tiruan otomatis')}
     ${F('Warna aksen', `<div class="swatches">${ACCENTS.map(a=>`<label class="sw"><input type="radio" name="f-accent" value="${a}" ${p.accent===a?'checked':''}><span style="background:${a}"></span></label>`).join('')}</div>`)}
-    ${F('URL demo (ops.)', `<input id="f-url" value="${esc(p.demoUrl||'')}" placeholder="https://...">`, 'bila diisi, aplikasi asli ditampilkan dalam bingkai perangkat')}
     ${F('Kompatibilitas perangkat', `
-      <div style="display:flex;flex-wrap:wrap;gap:10px">
+      <div class="compat-opts">
         ${['laptop','tablet','phone'].map(d => {
           const list = (p.compatibility && p.compatibility.length) ? p.compatibility : ['laptop','tablet','phone'];
-          const checked = list.includes(d);
-          return `<label style="display:inline-flex;align-items:center;gap:7px;border:1.5px solid var(--line-strong);border-radius:999px;padding:8px 14px;font-size:.85rem;font-weight:600;cursor:pointer">
-            <input type="checkbox" name="f-compat" value="${d}" ${checked?'checked':''}>
-            ${d==='laptop'?'Laptop':d==='tablet'?'Tablet':'HP'}
-          </label>`;
+          return `<label><input type="checkbox" name="f-compat" value="${d}" ${list.includes(d)?'checked':''}> ${d==='laptop'?'Laptop':d==='tablet'?'Tablet':'HP'}</label>`;
         }).join('')}
       </div>
-    `, 'centang perangkat yang didukung (boleh semua atau satu saja)')}
-    <div class="form-actions">
-      <button class="btn sm solid" id="saveBtn">${I('check',15)} Simpan produk</button>
+    `, 'centang yang didukung (boleh semua / satu)')}
+    <div class="ed-form-foot">
       <button class="btn sm line" id="cancelBtn">Batal</button>
+      <button class="btn sm solid" id="saveBtn">${I('check',15)} Simpan</button>
     </div>`;
 
-  $('#formBack').onclick = cancelEdit;
-  $('#cancelBtn').onclick = cancelEdit;
   $('#saveBtn').onclick = doSave;
+  $('#cancelBtn').onclick = closeEditModal;
+  $('#editModal').classList.add('on');
+  setTimeout(() => { const fname = $('#f-name'); if (fname) fname.focus(); }, 50);
 }
 
-function cancelEdit() {
+function closeEditModal() {
+  $('#editModal').classList.remove('on');
   editingId = null;
-  renderList();
-  renderEmpty();
+  $('#editFormBody').innerHTML = '';
 }
 
 async function doSave() {
+  if (saving) return; // guard double-submit
   const name = $('#f-name').value.trim();
   const price = parseInt($('#f-price').value,10) || 0;
   if (!name) { toast('Nama produk wajib diisi','x'); return; }
@@ -250,35 +280,32 @@ async function doSave() {
     mockup: $('#f-mk').value,
     accent: (document.querySelector('input[name=f-accent]:checked')||{}).value || '#1D5B43',
     demoUrl: $('#f-url').value.trim(),
-    compatibility: Array.from(document.querySelectorAll('input[name=f-compat]:checked')).map(x=>x.value)
+    compatibility: Array.from(document.querySelectorAll('input[name=f-compat]:checked')).map(x=>x.value),
+    image: $('#f-image').value.trim()
   };
 
+  saving = true;
   const btn = $('#saveBtn');
-  btn.innerHTML = 'Menyimpan...';
-  btn.disabled = true;
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
 
   const result = await saveProduct(obj);
 
-  btn.innerHTML = `${I('check',15)} Simpan produk`;
-  btn.disabled = false;
+  saving = false;
+  if (!btn) return;
+  btn.disabled = false; btn.innerHTML = `${I('check',15)} Simpan`;
 
-  if (result.error) {
-    toast('Gagal menyimpan: ' + result.error, 'x');
-    return;
-  }
+  if (result.error) { toast('Gagal: ' + result.error, 'x'); return; }
 
   // Update lokal
-  if (editingId === 'new') {
-    DATA.products.push(result.product || obj);
-  } else {
-    const i = DATA.products.findIndex(x=>x.id===editingId);
-    if (i >= 0) DATA.products[i] = result.product || obj;
-  }
-
+  const saved = result.product || obj;
+  const i = DATA.products.findIndex(x => x.id === saved.id);
+  if (i >= 0) DATA.products[i] = saved;
+  else DATA.products.push(saved);
   localStorage.setItem(LS_DATA, JSON.stringify(DATA));
-  editingId = null;
-  renderList();
-  renderEmpty();
+
+  // Tutup modal & kosongkan — baik new maupun edit
+  closeEditModal();
+  renderProducts();
   toast('Produk disimpan');
 }
 
@@ -286,104 +313,204 @@ async function doSave() {
    HAPUS PRODUK
    ═══════════════════════════════════════════════════════════ */
 function confirmDelete(id) {
-  const p = DATA.products.find(x=>x.id===id);
+  const p = DATA.products.find(x => x.id === id);
   if (!p) return;
-
-  openModal(`
+  openConfirm(`
     <h3>Hapus produk ini?</h3>
-    <p>"${esc(p.name)}" akan dihapus dari katalog.</p>
-    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px">
-      <button class="btn sm line" id="modalCancel">Batal</button>
-      <button class="btn sm" style="background:var(--clay);border-color:var(--clay);color:#fff" id="modalYes">Ya, hapus</button>
+    <p class="cd">"${esc(p.name)}" akan dihapus dari katalog.</p>
+    <div class="ed-form-foot">
+      <button class="btn sm line" id="cdCancel">Batal</button>
+      <button class="btn sm solid" id="cdYes" style="background:var(--clay);border-color:var(--clay)">Ya, hapus</button>
     </div>`);
-
-  $('#modalCancel').onclick = closeModal;
-  $('#modalYes').onclick = async () => {
-    closeModal();
+  $('#cdCancel').onclick = closeConfirm;
+  $('#cdYes').onclick = async () => {
+    closeConfirm();
+    if (saving) return;
+    saving = true;
     const result = await deleteProduct(id);
-    if (result.error) {
-      toast('Gagal menghapus: ' + result.error, 'x');
-      return;
-    }
-    DATA.products = DATA.products.filter(x=>x.id!==id);
+    saving = false;
+    if (result.error) { toast('Gagal menghapus', 'x'); return; }
+    DATA.products = DATA.products.filter(x => x.id !== id);
     localStorage.setItem(LS_DATA, JSON.stringify(DATA));
-    if (editingId === id) { editingId = null; renderEmpty(); }
-    renderList();
-    toast(`Produk "${p.name}" dihapus`, 'trash');
+    renderProducts();
+    toast(`"${p.name}" dihapus`, 'trash');
   };
 }
 
 /* ═══════════════════════════════════════════════════════════
-   PENGATURAN SITUS
+   FORM SITUS — modal
    ═══════════════════════════════════════════════════════════ */
-function renderSiteSettings() {
-  const s = DATA.site;
-  const main = $('#edMain');
-  main.innerHTML = `
-    <h2 style="font-size:1.6rem;margin-bottom:20px">Pengaturan Situs</h2>
-    ${F('Nama brand', `<input id="s-brand" value="${esc(s.brand||'')}">`)}
-    ${F('Judul hero', `<input id="s-tag" value="${esc(s.tagline||'')}">`, 'bungkus kata dengan _garis bawah_ untuk aksen italic hijau')}
-    ${F('Deskripsi hero', `<textarea id="s-sub">${esc(s.sub||'')}</textarea>`)}
-    ${F('Nomor WhatsApp', `<input id="s-wa" value="${esc(s.whatsapp||'')}">`, 'format 62xxx tanpa +')}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      ${F('Lokasi', `<input id="s-loc" value="${esc(s.location||'')}">`)}
-      ${F('Jam operasional', `<input id="s-hours" value="${esc(s.hours||'')}">`)}
-    </div>
-    ${F('Catatan footer', `<input id="s-note" value="${esc(s.note||'')}">`)}
-    <div class="form-actions"><button class="btn sm solid" id="saveSiteBtn">${I('check',15)} Simpan pengaturan</button></div>`;
+const SETTING_FIELDS = {
+  brand:    ['Nama brand', 'input'],
+  tagline:  ['Judul hero', 'text', 'bungkus kata _garis bawah_ untuk aksen hijau'],
+  sub:      ['Deskripsi hero', 'textarea'],
+  whatsapp: ['Nomor WhatsApp', 'input', 'format 62xxx tanpa +'],
+  location: ['Lokasi', 'input'],
+  hours:    ['Jam operasional', 'input'],
+  note:     ['Catatan footer', 'input']
+};
 
-  $('#saveSiteBtn').onclick = doSaveSite;
+function openSettingModal(key) {
+  const [label, type, hint] = SETTING_FIELDS[key] || [key, 'input'];
+  const val = DATA.site[key] || '';
+  $('#editModalTitle').textContent = 'Ubah: ' + label;
+  $('#editFormBody').innerHTML = `
+    ${type === 'textarea'
+      ? `<div class="fld"><label>${label}${hint?`<span class="hint"> — ${hint}</span>`:''}</label><textarea id="s-val">${esc(val)}</textarea></div>`
+      : F(label, `<input id="s-val" value="${esc(val)}" ${hint?`placeholder="${esc(hint)}"`:''} autofocus>`, hint)}
+    <div class="ed-form-foot">
+      <button class="btn sm line" id="cancelBtn">Batal</button>
+      <button class="btn sm solid" id="saveSiteBtn">${I('check',15)} Simpan</button>
+    </div>`;
+
+  $('#saveSiteBtn').onclick = () => doSaveSetting(key);
+  $('#cancelBtn').onclick = closeSettingModal;
+  $('#editModal').classList.add('on');
+  setTimeout(() => { const v = $('#s-val'); if (v) v.focus(); }, 50);
 }
 
-async function doSaveSite() {
-  const data = {
-    brand: $('#s-brand').value.trim() || DATA.site.brand,
-    tagline: $('#s-tag').value.trim(),
-    sub: $('#s-sub').value.trim(),
-    whatsapp: $('#s-wa').value.trim(),
-    location: $('#s-loc').value.trim(),
-    hours: $('#s-hours').value.trim(),
-    note: $('#s-note').value.trim()
-  };
-
+async function doSaveSetting(key) {
+  if (saving) return; // guard double-submit
   const btn = $('#saveSiteBtn');
-  btn.innerHTML = 'Menyimpan...';
-  btn.disabled = true;
+  const val = $('#s-val').value.trim();
 
-  const result = await saveSite(data);
+  saving = true;
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
 
-  btn.innerHTML = `${I('check',15)} Simpan pengaturan`;
-  btn.disabled = false;
+  const payload = { ...DATA.site, [key]: val };
+  const result = await saveSite(payload);
 
-  if (result.error) {
-    toast('Gagal menyimpan: ' + result.error, 'x');
-    return;
-  }
+  saving = false;
+  if (!btn) return;
+  btn.disabled = false; btn.innerHTML = `${I('check',15)} Simpan`;
 
-  DATA.site = { ...DATA.site, ...data };
+  if (result.error) { toast('Gagal: ' + result.error, 'x'); return; }
+
+  DATA.site = { ...DATA.site, [key]: val };
   localStorage.setItem(LS_DATA, JSON.stringify(DATA));
-  toast('Pengaturan situs disimpan');
+
+  closeSettingModal();
+  renderSettings();
+  toast('Pengaturan disimpan');
+}
+
+function closeSettingModal() {
+  $('#editModal').classList.remove('on');
+  $('#editFormBody').innerHTML = '';
 }
 
 /* ═══════════════════════════════════════════════════════════
-   TAB SWITCH
+   TAB TESTIMONI
    ═══════════════════════════════════════════════════════════ */
-function switchTab(tab) {
-  dwTab = tab;
-  editingId = null;
-  document.querySelectorAll('#edTabs button').forEach(b =>
-    b.classList.toggle('on', b.dataset.tab === tab));
+function renderTestimonialsConfig() {
+  const main = $('#edMain');
+  const list = (DATA.testimonials && DATA.testimonials.length) ? DATA.testimonials : [];
+  main.innerHTML = `
+    <div class="ed-list-head">
+      <div class="left">
+        <h2>Testimoni</h2>
+        <p>${list.length} testimoni · tampil di halaman depan</p>
+      </div>
+      <button class="ed-new-btn" id="newTstBtn">${I('plus',15)} Tambah</button>
+    </div>
+    <div class="ed-list">${list.length ? list.map(t => `
+      <div class="ed-item" data-id="${esc(t.id)}">
+        <div class="inf"><b>${esc(t.name)}</b><span>${esc(t.usaha||'')}${t.quote?' · '+esc(t.quote.slice(0,60))+(t.quote.length>60?'…':''):''}</span></div>
+        <div class="acts">
+          <button class="mini-btn" data-act="edit" title="Ubah">${I('pen',14)}</button>
+          <button class="mini-btn danger" data-act="del" title="Hapus">${I('trash',14)}</button>
+        </div>
+      </div>`).join('') : `<div class="ed-empty"><p class="serif">Belum ada testimoni</p><p>Klik "Tambah" untuk menambah.</p></div>`}
+    </div>`;
+  bindTabs();
 
-  if (tab === 'produk') {
-    renderList();
-    renderEmpty();
-  } else {
-    renderSiteSettings();
-  }
+  $('#newTstBtn').onclick = () => openTstModal('new');
+  main.querySelectorAll('.ed-item').forEach(item => {
+    const id = item.dataset.id;
+    item.addEventListener('click', e => {
+      const act = e.target.closest('[data-act]');
+      if (act && act.dataset.act === 'del') { e.stopPropagation(); confirmDeleteTst(id); }
+      else openTstModal(id);
+    });
+  });
+}
+
+function openTstModal(id) {
+  const isNew = id === 'new';
+  const t = isNew ? {name:'',usaha:'',quote:''} : DATA.testimonials.find(x => x.id === id);
+  if (!t) return;
+
+  $('#editModalTitle').textContent = isNew ? 'Tambah Testimoni' : 'Ubah Testimoni';
+  $('#editFormBody').innerHTML = `
+    ${F('Nama', `<input id="t-name" value="${esc(t.name)}" placeholder="mis. Bu Ratna" autofocus>`)}
+    ${F('Usaha', `<input id="t-usaha" value="${esc(t.usaha||'')}" placeholder="mis. Warung Bu Ratna">`)}
+    ${F('Kutipan', `<textarea id="t-quote" placeholder="Apa yang pelanggan katakan...">${esc(t.quote||'')}</textarea>`)}
+    <div class="ed-form-foot">
+      <button class="btn sm line" id="cancelBtn">Batal</button>
+      <button class="btn sm solid" id="saveTstBtn">${I('check',15)} Simpan</button>
+    </div>`;
+
+  $('#saveTstBtn').onclick = () => doSaveTst(id);
+  $('#cancelBtn').onclick = closeSettingModal;
+  $('#editModal').classList.add('on');
+  setTimeout(() => { const n = $('#t-name'); if (n) n.focus(); }, 50);
+}
+
+async function doSaveTst(id) {
+  if (saving) return;
+  const name = $('#t-name').value.trim();
+  const quote = $('#t-quote').value.trim();
+  if (!name || !quote) { toast('Nama dan kutipan wajib diisi','x'); return; }
+
+  const btn = $('#saveTstBtn');
+  saving = true; btn.disabled = true; btn.textContent = 'Menyimpan...';
+
+  const payload = { id: id === 'new' ? 'new' : id, name, usaha: $('#t-usaha').value.trim(), quote };
+  const result = await saveTestimonial(payload);
+
+  saving = false;
+  if (!btn) return;
+  btn.disabled = false; btn.innerHTML = `${I('check',15)} Simpan`;
+  if (result.error) { toast('Gagal: ' + result.error, 'x'); return; }
+
+  const saved = result.testimonial || payload;
+  const i = DATA.testimonials.findIndex(x => x.id === saved.id);
+  if (i >= 0) DATA.testimonials[i] = saved;
+  else DATA.testimonials.push(saved);
+  localStorage.setItem(LS_DATA, JSON.stringify(DATA));
+
+  closeSettingModal();
+  renderTestimonialsConfig();
+  toast('Testimoni disimpan');
+}
+
+function confirmDeleteTst(id) {
+  const t = DATA.testimonials.find(x => x.id === id);
+  if (!t) return;
+  openConfirm(`
+    <h3>Hapus testimoni?</h3>
+    <p class="cd">"${esc(t.name)}" akan dihapus.</p>
+    <div class="ed-form-foot">
+      <button class="btn sm line" id="cdCancel">Batal</button>
+      <button class="btn sm solid" id="cdYes" style="background:var(--clay);border-color:var(--clay)">Ya, hapus</button>
+    </div>`);
+  $('#cdCancel').onclick = closeConfirm;
+  $('#cdYes').onclick = async () => {
+    closeConfirm();
+    if (saving) return;
+    saving = true;
+    const result = await deleteTestimonial(id);
+    saving = false;
+    if (result.error) { toast('Gagal menghapus', 'x'); return; }
+    DATA.testimonials = DATA.testimonials.filter(x => x.id !== id);
+    localStorage.setItem(LS_DATA, JSON.stringify(DATA));
+    renderTestimonialsConfig();
+    toast('Testimoni dihapus', 'trash');
+  };
 }
 
 /* ═══════════════════════════════════════════════════════════
-   TOAST & MODAL
+   TOAST & CONFIRM MODAL
    ═══════════════════════════════════════════════════════════ */
 let toastT;
 function toast(msg, ic='check') {
@@ -394,41 +521,31 @@ function toast(msg, ic='check') {
   toastT = setTimeout(() => t.classList.remove('on'), 2800);
 }
 
-function openModal(html) {
-  $('#edModal').innerHTML = `<div class="ed-modal-card">${html}</div>`;
+function openConfirm(html) {
+  $('#edModal').innerHTML = `<div class="ed-modal-card small ed-modal-headless">${html}</div>`;
   $('#edModal').classList.add('on');
 }
-function closeModal() {
-  $('#edModal').classList.remove('on');
-}
+function closeConfirm() { $('#edModal').classList.remove('on'); }
 
 /* ═══════════════════════════════════════════════════════════
    EVENT BINDING
    ═══════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
-  // Login
   $('#loginBtn').onclick = doLogin;
-  $('#loginKey').addEventListener('keydown', e => {
-    if (e.key === 'Enter') doLogin();
-  });
-
-  // Logout
+  $('#loginKey').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
   $('#logoutBtn').onclick = doLogout;
-
-  // Tabs
-  $('#edTabs').addEventListener('click', e => {
-    const b = e.target.closest('button[data-tab]');
-    if (b) switchTab(b.dataset.tab);
-  });
-
-  // View site
   $('#viewSiteBtn').onclick = () => window.open('index.html', '_blank');
+  $('#editModalClose').onclick = () => { $('#editModal').classList.remove('on'); editingId = null; };
+  $('#editModal').addEventListener('click', e => { if (e.target.id === 'editModal') { $('#editModal').classList.remove('on'); editingId = null; } });
+  $('#edModal').addEventListener('click', e => { if (e.target.id === 'edModal') closeConfirm(); });
 
-  // Modal close on background click
-  $('#edModal').addEventListener('click', e => {
-    if (e.target.id === 'edModal') closeModal();
+  // Escape menutup modal
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if ($('#editModal').classList.contains('on')) { $('#editModal').classList.remove('on'); editingId = null; }
+      else if ($('#edModal').classList.contains('on')) closeConfirm();
+    }
   });
 
-  // Cek login status
   checkLogin();
 });

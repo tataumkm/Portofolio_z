@@ -27,3 +27,13 @@ Log perubahan file oleh Agent AI. Format: tanggal, file, deskripsi perubahan.
 | 17 | 2026-09-01 | gas/Code.gs | Fitur — Kolom `compatibility` (JSON array) di products; normalisasi default semua perangkat |
 | 18 | 2026-09-01 | js/editor.js | Fitur — Checkbox kompatibilitas perangkat (laptop/tablet/HP) pada form produk |
 | 19 | 2026-09-01 | js/viewer.js | Fitur — Preview detail & hover card hanya tampilkan perangkat kompatibel; default ke device pertama |
+| 20 | 2026-09-01 | editor.html | Redesign — Layout daftar penuh + modal form (#editModal) + confirm modal; hapus sidebar/main split |
+| 21 | 2026-09-01 | css/editor.css | Redesign — Minimalis: daftar list, form modal, tab, icon-btn; hilangkan form besar di halaman |
+| 22 | 2026-09-01 | js/editor.js | Redesign — Form produk & setting jadi modal; guard busy cegah double-submit; setelah save modal tutup & kosong; tab produk/situs |
+| 23 | 2026-09-01 | gas/Code.gs | Fitur — Kolom `image` di products + sheet `testimonials` + endpoint save/delete testimoni |
+| 24 | 2026-09-01 | js/api.js | Fitur — Tambah fungsi `saveTestimonial`, `deleteTestimonial` |
+| 25 | 2026-09-01 | js/viewer.js | Fitur — Thumbnail produk (URL, fallback mockup DOM), grid/list toggle, render testimoni, ikon kompatibilitas di baris |
+| 26 | 2026-09-01 | js/viewer.js | Fix — Hapus handler `#ownBtn` (block pemilik toko dihapus), tambah handler `#viewToggle` |
+| 27 | 2026-09-01 | css/viewer.css | Fitur — Thumbnail (.pthumb/.thumb-mock), grid layout, testimonial grid, FAQ accordion, view-toggle; hapus .own-btn |
+| 28 | 2026-09-01 | index.html | Fitur — Section testimoni + FAQ, toggle grid/list, hapus block "Untuk pemilik toko" & title phantom logo |
+| 29 | 2026-09-01 | js/editor.js | Fitur — Field `image` produk + tab kelola testimoni (CRUD modal) |
