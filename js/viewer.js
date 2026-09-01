@@ -340,6 +340,12 @@ function openDetail(id){
   const p = DATA.products.find(x=>x.id===id); if(!p) return;
   currentP = p;
   const d = $('#detail');
+  // Perangkat yang kompatibel dengan produk ini (default semua)
+  const compat = (p.compatibility && p.compatibility.length) ? p.compatibility : ['laptop','tablet','phone'];
+  const devs = ['laptop','tablet','phone'].filter(x => compat.includes(x));
+  const firstDev = devs[0] || 'laptop';
+  const DEV_LABEL = { laptop:'Laptop', tablet:'Tablet', phone:'HP' };
+  const DEV_ICON = { laptop:'laptop', tablet:'tablet', phone:'phone' };
   d.innerHTML = `
     <div class="d-top">
       <button class="d-back" id="dBack">${I('left',16)} Kembali ke katalog</button>
@@ -371,13 +377,11 @@ function openDetail(id){
       <div class="d-preview">
         <div class="dev-head">
           <div class="dev-switch" id="devSwitch">
-            <button data-dev="laptop" class="on">${I('laptop',15)} Laptop</button>
-            <button data-dev="tablet">${I('tablet',15)} Tablet</button>
-            <button data-dev="phone">${I('phone',15)} HP</button>
+            ${devs.map((dv,i) => `<button data-dev="${dv}" class="${i===0?'on':''}">${I(DEV_ICON[dv],15)} ${DEV_LABEL[dv]}</button>`).join('')}
           </div>
           <p class="dev-note">${p.mockup==='pos' ? I('hand',15)+' Preview interaktif — coba klik item menu' : I('laptop',15)+' Pratinjau tampilan aplikasi'}</p>
         </div>
-        <div class="device-stage" id="deviceStage">${deviceHTML(p,'laptop')}</div>
+        <div class="device-stage" id="deviceStage">${deviceHTML(p,firstDev)}</div>
       </div>
     </div>`;
   d.classList.add('open');
@@ -462,7 +466,9 @@ if(finePointer){
   $('#rows').addEventListener('pointerover', e => {
     const row = e.target.closest('.prow'); if(!row) return;
     const p = DATA.products.find(x=>x.id===row.dataset.id); if(!p) return;
-    hcIn.innerHTML = deviceHTML(p,'phone');
+    const compat = (p.compatibility && p.compatibility.length) ? p.compatibility : ['laptop','tablet','phone'];
+    const hcDev = compat.includes('phone') ? 'phone' : compat[0] || 'laptop';
+    hcIn.innerHTML = deviceHTML(p,hcDev);
     hcIn.classList.add('on'); hcActive = true;
   });
   $('#rows').addEventListener('pointerleave', () => { hcIn.classList.remove('on'); hcActive = false; });

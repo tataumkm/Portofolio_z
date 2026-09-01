@@ -24,3 +24,6 @@ Log perubahan file oleh Agent AI. Format: tanggal, file, deskripsi perubahan.
 | 14 | 2026-09-01 | js/api.js | Bug fix — Tambah fungsi `verifyApiKey()` untuk validasi API key saat login |
 | 15 | 2026-09-01 | js/editor.js | Bug fix — Login kini validasi API key dulu (verifyKey) sebelum masuk; key salah tidak bisa masuk |
 | 16 | 2026-09-01 | js/viewer.js | Bug fix — Render cache instant lebih dulu + loading state + pesan error jelas saat API gagal; produk tak hilang diam-diam |
+| 17 | 2026-09-01 | gas/Code.gs | Fitur — Kolom `compatibility` (JSON array) di products; normalisasi default semua perangkat |
+| 18 | 2026-09-01 | js/editor.js | Fitur — Checkbox kompatibilitas perangkat (laptop/tablet/HP) pada form produk |
+| 19 | 2026-09-01 | js/viewer.js | Fitur — Preview detail & hover card hanya tampilkan perangkat kompatibel; default ke device pertama |

@@ -181,7 +181,7 @@ function startEdit(id) {
 
 function renderForm() {
   const p = editingId === 'new'
-    ? {name:'',category:DATA.categories[0]?.id||'',price:'',compareAt:'',badge:'',tagline:'',desc:'',features:[],mockup:'plain',accent:'#1D5B43',demoUrl:''}
+    ? {name:'',category:DATA.categories[0]?.id||'',price:'',compareAt:'',badge:'',tagline:'',desc:'',features:[],mockup:'plain',accent:'#1D5B43',demoUrl:'',compatibility:['laptop','tablet','phone']}
     : DATA.products.find(x=>x.id===editingId);
 
   if (!p && editingId !== 'new') { editingId = null; renderList(); return; }
@@ -205,6 +205,18 @@ function renderForm() {
     ${F('Jenis preview', `<select id="f-mk">${MOCK_OPTS.map(m=>`<option value="${m[0]}" ${p.mockup===m[0]?'selected':''}>${m[1]}</option>`).join('')}</select>`, 'tampilan tiruan di halaman detail')}
     ${F('Warna aksen', `<div class="swatches">${ACCENTS.map(a=>`<label class="sw"><input type="radio" name="f-accent" value="${a}" ${p.accent===a?'checked':''}><span style="background:${a}"></span></label>`).join('')}</div>`)}
     ${F('URL demo (ops.)', `<input id="f-url" value="${esc(p.demoUrl||'')}" placeholder="https://...">`, 'bila diisi, aplikasi asli ditampilkan dalam bingkai perangkat')}
+    ${F('Kompatibilitas perangkat', `
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        ${['laptop','tablet','phone'].map(d => {
+          const list = (p.compatibility && p.compatibility.length) ? p.compatibility : ['laptop','tablet','phone'];
+          const checked = list.includes(d);
+          return `<label style="display:inline-flex;align-items:center;gap:7px;border:1.5px solid var(--line-strong);border-radius:999px;padding:8px 14px;font-size:.85rem;font-weight:600;cursor:pointer">
+            <input type="checkbox" name="f-compat" value="${d}" ${checked?'checked':''}>
+            ${d==='laptop'?'Laptop':d==='tablet'?'Tablet':'HP'}
+          </label>`;
+        }).join('')}
+      </div>
+    `, 'centang perangkat yang didukung (boleh semua atau satu saja)')}
     <div class="form-actions">
       <button class="btn sm solid" id="saveBtn">${I('check',15)} Simpan produk</button>
       <button class="btn sm line" id="cancelBtn">Batal</button>
@@ -237,7 +249,8 @@ async function doSave() {
     features: $('#f-feat').value.split('\n').map(x=>x.trim()).filter(Boolean),
     mockup: $('#f-mk').value,
     accent: (document.querySelector('input[name=f-accent]:checked')||{}).value || '#1D5B43',
-    demoUrl: $('#f-url').value.trim()
+    demoUrl: $('#f-url').value.trim(),
+    compatibility: Array.from(document.querySelectorAll('input[name=f-compat]:checked')).map(x=>x.value)
   };
 
   const btn = $('#saveBtn');

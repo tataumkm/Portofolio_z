@@ -129,6 +129,17 @@ function getAllData() {
       // Parse number fields
       product.price = Number(product.price) || 0;
       product.compareAt = Number(product.compareAt) || 0;
+      // Parse compatibility dari JSON string
+      if (typeof product.compatibility === 'string') {
+        try { product.compatibility = JSON.parse(product.compatibility); }
+        catch (e) { product.compatibility = []; }
+      } else if (!Array.isArray(product.compatibility)) {
+        product.compatibility = [];
+      }
+      // Default: beri laptop/tablet/phone kalau kosong (kompatibel semua)
+      if (!product.compatibility || product.compatibility.length === 0) {
+        product.compatibility = ['laptop', 'tablet', 'phone'];
+      }
       products.push(product);
     }
   }
@@ -150,11 +161,16 @@ function saveProduct(data) {
   // Buat sheet kalau belum ada
   if (!sheet) {
     sheet = ss.insertSheet('products');
-    sheet.appendRow(['id', 'name', 'category', 'price', 'compareAt', 'badge', 'tagline', 'desc', 'features', 'mockup', 'accent', 'demoUrl']);
+    sheet.appendRow(['id', 'name', 'category', 'price', 'compareAt', 'badge', 'tagline', 'desc', 'features', 'mockup', 'accent', 'demoUrl', 'compatibility']);
   }
 
   // Features → JSON string
   const features = Array.isArray(data.features) ? JSON.stringify(data.features) : (data.features || '[]');
+
+  // Compatibility → JSON string (default semua perangkat)
+  const compat = Array.isArray(data.compatibility) && data.compatibility.length > 0
+    ? data.compatibility : ['laptop', 'tablet', 'phone'];
+  const compatStr = JSON.stringify(compat);
 
   // Generate ID baru kalau perlu
   const id = data.id && data.id !== 'new' ? data.id : 'p-' + Date.now();
@@ -171,7 +187,8 @@ function saveProduct(data) {
     features,
     data.mockup || 'plain',
     data.accent || '#1D5B43',
-    data.demoUrl || ''
+    data.demoUrl || '',
+    compatStr
   ];
 
   // Cari apakah produk sudah ada
@@ -185,7 +202,7 @@ function saveProduct(data) {
     sheet.appendRow(row);
   }
 
-  return { success: true, product: { id, ...data, features: Array.isArray(data.features) ? data.features : [] } };
+  return { success: true, product: { id, ...data, features: Array.isArray(data.features) ? data.features : [], compatibility: compat } };
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -294,7 +311,7 @@ function setupSheets() {
   let prodSheet = ss.getSheetByName('products');
   if (!prodSheet) {
     prodSheet = ss.insertSheet('products');
-    prodSheet.appendRow(['id', 'name', 'category', 'price', 'compareAt', 'badge', 'tagline', 'desc', 'features', 'mockup', 'accent', 'demoUrl']);
+    prodSheet.appendRow(['id', 'name', 'category', 'price', 'compareAt', 'badge', 'tagline', 'desc', 'features', 'mockup', 'accent', 'demoUrl', 'compatibility']);
   }
 
   Logger.log('Setup selesai! Semua sheet sudah dibuat dengan data awal.');
